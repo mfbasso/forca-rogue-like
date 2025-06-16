@@ -31,7 +31,28 @@ function keyboard.draw(screenWidth, screenHeight)
             love.graphics.print(letter, x + (keyboard.boxSize - letterWidth) / 2, y + (keyboard.boxSize - letterHeight) / 2)
         end
     end
+    -- Botão de apagar
+    local eraseX, eraseY, eraseW, eraseH = keyboard.getEraseButtonRect(screenWidth, screenHeight)
+    love.graphics.setColor(1, 0.3, 0.3)
+    love.graphics.rectangle("fill", eraseX, eraseY, eraseW, eraseH, 8, 8)
     love.graphics.setColor(1, 1, 1)
+    local eraseFont = love.graphics.newFont(18)
+    love.graphics.setFont(eraseFont)
+    local eraseText = "Apagar"
+    local eraseTextW = eraseFont:getWidth(eraseText)
+    local eraseTextH = eraseFont:getHeight()
+    love.graphics.print(eraseText, eraseX + (eraseW - eraseTextW) / 2, eraseY + (eraseH - eraseTextH) / 2)
+    love.graphics.setFont(love.graphics.newFont(12))
+    love.graphics.setColor(1, 1, 1)
+end
+
+function keyboard.getEraseButtonRect(screenWidth, screenHeight)
+    local eraseW, eraseH = 90, 36
+    local eraseX = (screenWidth - eraseW) / 2
+    local numRows = #keyboard.rows
+    local totalHeight = numRows * keyboard.boxSize + (numRows - 1) * keyboard.boxSpacing
+    local eraseY = screenHeight - 24
+    return eraseX, eraseY, eraseW, eraseH
 end
 
 return keyboard

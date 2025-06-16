@@ -1,6 +1,10 @@
-# Makefile para rodar e buildar o projeto Love2D
-
-.PHONY: run build watch
+.PHONY: run
 
 run:
-	love .
+	love --console .
+
+build:
+	love --console --release .
+
+watch:
+	love --console --watch .
