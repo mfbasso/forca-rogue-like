@@ -1,9 +1,6 @@
 # Makefile para rodar e buildar o projeto Love2D
 
-.PHONY: run build
+.PHONY: run build watch
 
 run:
 	love .
-
-build:
-	zip -r jogo-forca.love . -x "*.git*" -x "*.DS_Store" -x "*/\.*" -x "Makefile"

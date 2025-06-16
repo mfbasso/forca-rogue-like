@@ -23,4 +23,5 @@ Este projeto é um jogo da forca com elementos rogue-like feito em LÖVE (Love2D
    ```
 
 ## Créditos
+
 - Estrutura inicial gerada por GitHub Copilot
