@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  forca-rogue-like:
+    build: .
+    container_name: forca-rogue-like
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.forca-rogue-like.rule=Host(`forca-rogue-like.faus.top`)"
+      - "traefik.http.routers.forca-rogue-like.entrypoints=web"
+    ports:
+      - "8080:8080"
