@@ -121,7 +121,7 @@ function GameScene:draw()
             love.graphics.printf("Custa: 40 moedas", itemX, itemY + 40, itemW, "center")
         end
         -- Item: +10 segundos
-        if GameState.roundTime < 60 then
+        if GameState.roundTime < 60 and not GameState.plusTimeBought then
             local plusTimeY = screenH/2 + 50
             local plusTimeW, plusTimeH = 340, 70
             local plusTimeX = (screenW - plusTimeW) / 2
@@ -133,7 +133,7 @@ function GameScene:draw()
             love.graphics.printf("+10 segundos", plusTimeX, plusTimeY + 10, plusTimeW, "center")
             local plusTimePriceFont = love.graphics.newFont(18)
             love.graphics.setFont(plusTimePriceFont)
-            love.graphics.printf("Custa: 15 moedas", plusTimeX, plusTimeY + 40, plusTimeW, "center")
+            love.graphics.printf("Custa: 60 moedas", plusTimeX, plusTimeY + 40, plusTimeW, "center")
         end
         -- Botão próximo round
         local btnW, btnH = 320, 48
@@ -211,9 +211,10 @@ function GameScene:mousepressed(x, y, button)
         local plusTimeX = (screenW - plusTimeW) / 2
         local plusTimeY = screenH/2 + 50
         if x >= plusTimeX and x <= plusTimeX + plusTimeW and y >= plusTimeY and y <= plusTimeY + plusTimeH then
-            if GameState.coins >= 15 then
-                GameState.coins = GameState.coins - 15
+            if GameState.coins >= 60 then
+                GameState.coins = GameState.coins - 60
                 GameState.roundTime = GameState.roundTime + 10
+                GameState.plusTimeBought = true
             end
             return
         end
