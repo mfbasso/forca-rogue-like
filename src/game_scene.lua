@@ -168,7 +168,8 @@ function GameScene:mousepressed(x, y, button)
     local kb = keyboard
     local numRows = #kb.rows
     local totalHeight = numRows * kb.boxSize + (numRows - 1) * kb.boxSpacing
-    local startY = screenH - totalHeight - 32
+    -- Suba o teclado em 30% da tela
+    local startY = screenH - totalHeight - 32 - (screenH * 0.3)
     for rowIdx, row in ipairs(kb.rows) do
         local boxes = #row
         local totalWidth = boxes * kb.boxSize + (boxes - 1) * kb.boxSpacing

@@ -12,7 +12,8 @@ keyboard.boxSpacing = 4
 function keyboard.draw(screenWidth, screenHeight)
     local numRows = #keyboard.rows
     local totalHeight = numRows * keyboard.boxSize + (numRows - 1) * keyboard.boxSpacing
-    local startY = screenHeight - totalHeight - 32
+    -- Suba o teclado em 30% da tela
+    local startY = screenHeight - totalHeight - 32 - (screenHeight * 0.1)
     for rowIdx, row in ipairs(keyboard.rows) do
         local boxes = #row
         local totalWidth = boxes * keyboard.boxSize + (boxes - 1) * keyboard.boxSpacing
@@ -51,7 +52,8 @@ function keyboard.getEraseButtonRect(screenWidth, screenHeight)
     local eraseX = (screenWidth - eraseW) / 2
     local numRows = #keyboard.rows
     local totalHeight = numRows * keyboard.boxSize + (numRows - 1) * keyboard.boxSpacing
-    local eraseY = screenHeight - 24
+    -- Suba o botão de apagar em 10% da tela
+    local eraseY = screenHeight - 24 - (screenHeight * 0.1)
     return eraseX, eraseY, eraseW, eraseH
 end
 
