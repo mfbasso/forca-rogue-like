@@ -1,6 +1,8 @@
 local LetterBoxes = require("src.letter_boxes")
 local GameSettings = require("src.game_settings")
 local question_selector = require("src/utils/question_selector")
+local keyboard = require("src.virtual_keyboard")
+local randomSeed = require("src.utils.random_seed")
 local GameScene = {}
 GameScene.__index = GameScene
 
@@ -8,7 +10,7 @@ function GameScene:new(allQuestions, round, seed)
     local obj = setmetatable({}, self)
     obj.allQuestions = allQuestions
     obj.round = round or 1
-    obj.seed = seed or tostring(os.time())
+    obj.seed = seed or randomSeed.randomSeedString(6)
     obj.usedQuestions = {}
     obj.questions = obj:selectQuestionsForRound()
     obj.currentIndex = 1
@@ -24,8 +26,12 @@ function GameScene:selectQuestionsForRound()
     local questions = {}
     local tries = 0
     local allowRepeat = require("src.game_settings").repeatQuestions
+    local seedNum = 0
+    for i = 1, #self.seed do
+        seedNum = seedNum + string.byte(self.seed, i)
+    end
     while #questions < 3 and tries < 100 do
-        local q = question_selector.select_question(self.round or 1, tonumber(self.seed) + #questions * 100 + tries * 1000)
+        local q = question_selector.select_question(self.round or 1, seedNum + #questions * 100 + tries * 1000)
         local key = q.question .. "|" .. q.answer .. "|" .. tostring(q.level)
         if allowRepeat or not self.usedQuestions[key] then
             if not allowRepeat then
@@ -67,7 +73,7 @@ function GameScene:draw()
     love.graphics.setColor(1, 1, 1)
     local seedText = "Seed: " .. tostring(self.seed or "-")
     love.graphics.setFont(love.graphics.newFont(14))
-    love.graphics.print(seedText, screenW - 180, screenH - 30)
+    love.graphics.print(seedText, screenW - 120, screenH - 30)
     if self.state == "gameover" then
         local font = love.graphics.newFont(36)
         love.graphics.setFont(font)
@@ -139,7 +145,7 @@ function GameScene:mousepressed(x, y, button)
             self.correctCount = 0
             self.timeLeft = 30
             self.state = "playing"
-            self.seed = tostring(os.time()) .. tostring(math.random(100000,999999))
+            self.seed = randomSeed.randomSeedString(6)
             self.questions = self:selectQuestionsForRound()
             self:setCurrentQuestion()
             return
@@ -168,8 +174,8 @@ function GameScene:mousepressed(x, y, button)
     local kb = keyboard
     local numRows = #kb.rows
     local totalHeight = numRows * kb.boxSize + (numRows - 1) * kb.boxSpacing
-    -- Raise the keyboard by 30% of the screen
-    local startY = screenH - totalHeight - 32 - (screenH * 0.3)
+    -- Raise the keyboard by 10% of the screen (igual ao desenho)
+    local startY = screenH - totalHeight - 32 - (screenH * 0.1)
     for rowIdx, row in ipairs(kb.rows) do
         local boxes = #row
         local totalWidth = boxes * kb.boxSize + (boxes - 1) * kb.boxSpacing

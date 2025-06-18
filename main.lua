@@ -2,6 +2,7 @@ local GameScene = require("src.game_scene")
 local MenuScene = require("src.menu_scene")
 local currentScene
 local allQuestions = require("src.questions")
+local randomSeed = require("src.utils.random_seed")
 
 local function shuffle(tbl)
     for i = #tbl, 2, -1 do
@@ -11,7 +12,7 @@ local function shuffle(tbl)
 end
 
 local function startGame()
-    local seed = tostring(os.time()) .. tostring(math.random(100000,999999))
+    local seed = randomSeed.randomSeedString(6)
     currentScene = GameScene:new(allQuestions, 1, seed)
 end
 
