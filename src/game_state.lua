@@ -2,7 +2,7 @@ local GameState = {
     showFirstLetter = false,
     repeatQuestions = false,
     coins = 0,
-    roundTime = 30,
+    roundTime = 45,
     plusTimeBought = false,
 }
 
