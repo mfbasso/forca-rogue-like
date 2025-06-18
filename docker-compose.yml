@@ -1,4 +1,7 @@
-version: '3.8'
+networks:
+  web:
+    external: true
+
 services:
   forca-rogue-like:
     build: .
