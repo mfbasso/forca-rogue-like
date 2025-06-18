@@ -91,7 +91,7 @@ function GameScene:draw()
         love.graphics.setColor(1, 1, 1)
         local btnFont = love.graphics.newFont(24)
         love.graphics.setFont(btnFont)
-        love.graphics.printf("Try Again", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
+        love.graphics.printf("Jogar novamente", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
         return
     elseif self.state == "next_round" then
         local font = love.graphics.newFont(36)
