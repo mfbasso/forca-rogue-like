@@ -17,8 +17,15 @@ end
 function LetterBoxes:setWord(word)
     self.word = word or ""
     self.letters = {}
+    local idx = 1
     for i = 1, #self.word do
-        self.letters[i] = ""
+        local c = self.word:sub(i, i)
+        if c == " " then
+            self.letters[idx] = "_SPACE_"
+        else
+            self.letters[idx] = ""
+        end
+        idx = idx + 1
     end
 end
 
@@ -33,7 +40,7 @@ end
 
 function LetterBoxes:removeLastLetter()
     for i = #self.letters, 1, -1 do
-        if self.letters[i] ~= "" then
+        if self.letters[i] ~= "" and self.letters[i] ~= "_SPACE_" then
             self.letters[i] = ""
             break
         end
@@ -56,13 +63,17 @@ function LetterBoxes:draw()
     local font = love.graphics.newFont(26)
     for i = 1, n do
         local x = startX + (i - 1) * (boxSize + boxSpacing)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("fill", x, self.y, boxSize, boxSize, 10, 10)
-        love.graphics.setColor(0, 0, 0)
-        love.graphics.setFont(font)
-        local letter = self.letters[i]
-        if letter ~= "" then
-            love.graphics.print(letter, x + (boxSize - font:getWidth(letter)) / 2, self.y + (boxSize - font:getHeight()) / 2)
+        if self.letters[i] == "_SPACE_" then
+           
+        else
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("fill", x, self.y, boxSize, boxSize, 10, 10)
+            love.graphics.setColor(0, 0, 0)
+            love.graphics.setFont(font)
+            local letter = self.letters[i]
+            if letter ~= "" then
+                love.graphics.print(letter, x + (boxSize - font:getWidth(letter)) / 2, self.y + (boxSize - font:getHeight()) / 2)
+            end
         end
     end
     love.graphics.setColor(1, 1, 1)

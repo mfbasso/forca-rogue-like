@@ -2,9 +2,11 @@ local LetterBoxes = require("src.letter_boxes")
 local GameScene = {}
 GameScene.__index = GameScene
 
-function GameScene:new(questions)
+function GameScene:new(allQuestions, round)
     local obj = setmetatable({}, self)
-    obj.questions = questions
+    obj.allQuestions = allQuestions
+    obj.round = round or 1
+    obj.questions = obj:selectQuestionsForRound()
     obj.currentIndex = 1
     obj.correctCount = 0
     obj.timeLeft = 30
@@ -14,8 +16,31 @@ function GameScene:new(questions)
     return obj
 end
 
+function GameScene:selectQuestionsForRound()
+    local allQuestions = self.allQuestions or {}
+    local questions = {}
+    -- Embaralha as perguntas para garantir aleatoriedade
+    local indices = {}
+    for i = 1, #allQuestions do table.insert(indices, i) end
+    math.randomseed(os.time() + (self.round or 1) * 1000 + math.random(1000000))
+    for i = #indices, 2, -1 do
+        local j = math.random(i)
+        indices[i], indices[j] = indices[j], indices[i]
+    end
+    for i = 1, math.min(3, #indices) do
+        table.insert(questions, allQuestions[indices[i]])
+    end
+    return questions
+end
+
 function GameScene:setCurrentQuestion()
-    local q = self.questions[self.currentIndex]
+    local q = self.questions and self.questions[self.currentIndex] or nil
+    if not q then
+        if self.state ~= "gameover" and self.state ~= "next_round" then
+            self.state = "next_round"
+        end
+        return
+    end
     local LetterBoxes = require("src.letter_boxes")
     local screenW = love.graphics.getWidth()
     self.currentQuestion = q.question
@@ -39,8 +64,27 @@ function GameScene:draw()
         love.graphics.setFont(font)
         love.graphics.setColor(1, 0.2, 0.2)
         love.graphics.printf("Game Over", 0, screenH/2-60, screenW, "center")
-        -- Draw Try Again button
+        -- Novo texto com o round atingido
+        local infoFont = love.graphics.newFont(22)
+        love.graphics.setFont(infoFont)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf("Você chegou até o round " .. tostring(self.round or 1), 0, screenH/2-10, screenW, "center")
         local btnW, btnH = 220, 48
+        local btnX = (screenW - btnW) / 2
+        local btnY = screenH/2 + 40
+        love.graphics.setColor(0.2, 0.2, 1)
+        love.graphics.rectangle("fill", btnX, btnY, btnW, btnH, 12, 12)
+        love.graphics.setColor(1, 1, 1)
+        local btnFont = love.graphics.newFont(24)
+        love.graphics.setFont(btnFont)
+        love.graphics.printf("Try Again", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
+        return
+    elseif self.state == "next_round" then
+        local font = love.graphics.newFont(36)
+        love.graphics.setFont(font)
+        love.graphics.setColor(0.2, 1, 0.2)
+        love.graphics.printf("Round Complete!", 0, screenH/2-60, screenW, "center")
+        local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
         local btnY = screenH/2 + 10
         love.graphics.setColor(0.2, 0.2, 1)
@@ -48,25 +92,31 @@ function GameScene:draw()
         love.graphics.setColor(1, 1, 1)
         local btnFont = love.graphics.newFont(24)
         love.graphics.setFont(btnFont)
-        love.graphics.printf("Tentar novamente", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
+        love.graphics.printf("Go to Next Round", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
         return
     elseif self.state == "win" then
         local font = love.graphics.newFont(36)
         love.graphics.setFont(font)
         love.graphics.setColor(0.2, 1, 0.2)
-        love.graphics.printf("Parabéns!", 0, screenH/2-40, screenW, "center")
+        love.graphics.printf("Congratulations!", 0, screenH/2-40, screenW, "center")
         return
     end
     local font = love.graphics.newFont(22)
     love.graphics.setFont(font)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print(self.currentQuestion, 32, 180)
+    -- Quebra o texto da pergunta para caber na tela
+    local questionText = self.currentQuestion or ""
+    local maxWidth = screenW - 64
+    love.graphics.printf(questionText, 32, 180, maxWidth, "center")
     self.letterBoxesComponent:draw()
     keyboard.draw(screenW, screenH)
     local timerFont = love.graphics.newFont(18)
     love.graphics.setFont(timerFont)
     love.graphics.setColor(1, 1, 0.2)
-    love.graphics.print("Tempo: " .. math.ceil(self.timeLeft), screenW - 120, 20)
+    love.graphics.print("Time: " .. math.ceil(self.timeLeft), screenW - 120, 20)
+    love.graphics.setColor(1, 1, 1)
+    local roundText = self.round or 1
+    love.graphics.print("Round: " .. tostring(roundText), 32, 20)
 end
 
 function GameScene:mousepressed(x, y, button)
@@ -76,10 +126,29 @@ function GameScene:mousepressed(x, y, button)
         local btnX = (screenW - btnW) / 2
         local btnY = screenH/2 + 10
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
+            self.round = 1
             self.currentIndex = 1
             self.correctCount = 0
             self.timeLeft = 30
             self.state = "playing"
+            self.questions = self:selectQuestionsForRound()
+            self:setCurrentQuestion()
+            return
+        end
+        return
+    elseif self.state == "next_round" then
+        local screenW, screenH = love.graphics.getDimensions()
+        local btnW, btnH = 320, 48
+        local btnX = (screenW - btnW) / 2
+        local btnY = screenH/2 + 10
+        if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
+            self.round = (self.round or 1) + 1
+            self.currentIndex = 1
+            self.correctCount = 0
+            self.timeLeft = 30
+            self.state = "playing"
+            -- Sorteia novas perguntas para o novo round
+            self.questions = self:selectQuestionsForRound()
             self:setCurrentQuestion()
             return
         end
@@ -146,13 +215,17 @@ end
 function GameScene:checkAnswer()
     local guess = ""
     for i = 1, #self.letterBoxesComponent.letters do
-        guess = guess .. (self.letterBoxesComponent.letters[i] or "")
+        local l = self.letterBoxesComponent.letters[i]
+        if l ~= "_SPACE_" then
+            guess = guess .. (l or "")
+        end
     end
-    if #guess < #self.currentAnswer then return end
-    if guess == self.currentAnswer then
+    local answerNoSpaces = (self.currentAnswer or ""):gsub(" ", "")
+    if #guess < #answerNoSpaces then return end
+    if guess == answerNoSpaces then
         self.correctCount = self.correctCount + 1
-        if self.correctCount >= #self.questions then
-            self.state = "win"
+        if self.correctCount >= 3 then
+            self.state = "next_round"
         else
             self.currentIndex = self.currentIndex + 1
             self:setCurrentQuestion()

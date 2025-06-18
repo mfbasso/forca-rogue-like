@@ -11,13 +11,7 @@ local function shuffle(tbl)
 end
 
 local function startGame()
-    local questionsCopy = {}
-    for i, q in ipairs(allQuestions) do
-        questionsCopy[i] = q
-    end
-    shuffle(questionsCopy)
-    local questions = {questionsCopy[1], questionsCopy[2], questionsCopy[3]}
-    currentScene = GameScene:new(questions)
+    currentScene = GameScene:new(allQuestions, 1)
 end
 
 function love.load()
