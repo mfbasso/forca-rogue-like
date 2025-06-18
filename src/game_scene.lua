@@ -15,7 +15,7 @@ function GameScene:new(allQuestions, round, seed)
     obj.questions = obj:selectQuestionsForRound()
     obj.currentIndex = 1
     obj.correctCount = 0
-    obj.timeLeft = 30
+    obj.timeLeft = GameState.roundTime
     obj.letterBoxesComponent = nil
     obj:setCurrentQuestion()
     obj.state = "playing"
@@ -120,6 +120,21 @@ function GameScene:draw()
             love.graphics.setFont(priceFont)
             love.graphics.printf("Custa: 40 moedas", itemX, itemY + 40, itemW, "center")
         end
+        -- Item: +10 segundos
+        if GameState.roundTime < 60 then
+            local plusTimeY = screenH/2 + 50
+            local plusTimeW, plusTimeH = 340, 70
+            local plusTimeX = (screenW - plusTimeW) / 2
+            love.graphics.setColor(0.15, 0.2, 0.15)
+            love.graphics.rectangle("fill", plusTimeX, plusTimeY, plusTimeW, plusTimeH, 14, 14)
+            love.graphics.setColor(1, 1, 1)
+            local plusTimeFont = love.graphics.newFont(24)
+            love.graphics.setFont(plusTimeFont)
+            love.graphics.printf("+10 segundos", plusTimeX, plusTimeY + 10, plusTimeW, "center")
+            local plusTimePriceFont = love.graphics.newFont(18)
+            love.graphics.setFont(plusTimePriceFont)
+            love.graphics.printf("Custa: 15 moedas", plusTimeX, plusTimeY + 40, plusTimeW, "center")
+        end
         -- Botão próximo round
         local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
@@ -167,7 +182,7 @@ function GameScene:mousepressed(x, y, button)
             self.round = 1
             self.currentIndex = 1
             self.correctCount = 0
-            self.timeLeft = 30
+            self.timeLeft = GameState.roundTime
             self.state = "playing"
             self.seed = randomSeed.randomSeedString(6)
             self.questions = self:selectQuestionsForRound()
@@ -188,6 +203,17 @@ function GameScene:mousepressed(x, y, button)
             if GameState.coins >= 40 and not GameState.showFirstLetter then
                 GameState.coins = GameState.coins - 40
                 GameState.showFirstLetter = true
+            end
+            return
+        end
+        -- Item: +10 segundos
+        local plusTimeW, plusTimeH = 340, 70
+        local plusTimeX = (screenW - plusTimeW) / 2
+        local plusTimeY = screenH/2 + 50
+        if x >= plusTimeX and x <= plusTimeX + plusTimeW and y >= plusTimeY and y <= plusTimeY + plusTimeH then
+            if GameState.coins >= 15 then
+                GameState.coins = GameState.coins - 15
+                GameState.roundTime = GameState.roundTime + 10
             end
             return
         end
@@ -237,7 +263,7 @@ function GameScene:mousepressed(x, y, button)
             local newGame = GameScene:new(self.questions)
             newGame.correctCount = 0
             newGame.currentIndex = 1
-            newGame.timeLeft = 30
+            newGame.timeLeft = GameState.roundTime
             newGame.state = "playing"
             newGame:setCurrentQuestion()
             return newGame
@@ -293,7 +319,7 @@ function GameScene:goToNextRound()
     self.round = (self.round or 1) + 1
     self.currentIndex = 1
     self.correctCount = 0
-    self.timeLeft = 30
+    self.timeLeft = GameState.roundTime
     self.state = "playing"
     self.questions = self:selectQuestionsForRound()
     self:setCurrentQuestion()
