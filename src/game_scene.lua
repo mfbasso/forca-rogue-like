@@ -128,6 +128,21 @@ function GameScene:mousepressed(x, y, button)
     end
 end
 
+function GameScene:keypressed(key)
+    if self.state ~= "playing" then return end
+    if key == "backspace" then
+        self.letterBoxesComponent:removeLastLetter()
+        return
+    end
+    if #key == 1 then
+        local upper = string.upper(key)
+        if upper:match("^[A-ZÁÉÍÓÚÃÕÇ]$") then
+            self.letterBoxesComponent:insertLetter(upper)
+            self:checkAnswer()
+        end
+    end
+end
+
 function GameScene:checkAnswer()
     local guess = ""
     for i = 1, #self.letterBoxesComponent.letters do
