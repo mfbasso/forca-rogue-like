@@ -9,7 +9,7 @@ function GameScene:new(allQuestions, round, seed)
     obj.allQuestions = allQuestions
     obj.round = round or 1
     obj.seed = seed or tostring(os.time())
-    obj.perguntasUsadas = {}
+    obj.usedQuestions = {}
     obj.questions = obj:selectQuestionsForRound()
     obj.currentIndex = 1
     obj.correctCount = 0
@@ -26,10 +26,10 @@ function GameScene:selectQuestionsForRound()
     local allowRepeat = require("src.game_settings").repeatQuestions
     while #questions < 3 and tries < 100 do
         local q = question_selector.select_question(self.round or 1, tonumber(self.seed) + #questions * 100 + tries * 1000)
-        local chave = q.question .. "|" .. q.answer .. "|" .. tostring(q.level)
-        if allowRepeat or not self.perguntasUsadas[chave] then
+        local key = q.question .. "|" .. q.answer .. "|" .. tostring(q.level)
+        if allowRepeat or not self.usedQuestions[key] then
             if not allowRepeat then
-                self.perguntasUsadas[chave] = true
+                self.usedQuestions[key] = true
             end
             table.insert(questions, q)
         end
@@ -91,7 +91,7 @@ function GameScene:draw()
         local font = love.graphics.newFont(36)
         love.graphics.setFont(font)
         love.graphics.setColor(0.2, 1, 0.2)
-        love.graphics.printf("Round Complete!", 0, screenH/2-60, screenW, "center")
+        love.graphics.printf("Round completo!", 0, screenH/2-60, screenW, "center")
         local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
         local btnY = screenH/2 + 10
@@ -100,7 +100,7 @@ function GameScene:draw()
         love.graphics.setColor(1, 1, 1)
         local btnFont = love.graphics.newFont(24)
         love.graphics.setFont(btnFont)
-        love.graphics.printf("Go to Next Round", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
+        love.graphics.printf("Ir para o próximo round", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
         return
     elseif self.state == "win" then
         local font = love.graphics.newFont(36)
@@ -168,7 +168,7 @@ function GameScene:mousepressed(x, y, button)
     local kb = keyboard
     local numRows = #kb.rows
     local totalHeight = numRows * kb.boxSize + (numRows - 1) * kb.boxSpacing
-    -- Suba o teclado em 30% da tela
+    -- Raise the keyboard by 30% of the screen
     local startY = screenH - totalHeight - 32 - (screenH * 0.3)
     for rowIdx, row in ipairs(kb.rows) do
         local boxes = #row
