@@ -94,13 +94,36 @@ function GameScene:draw()
         love.graphics.printf("Jogar novamente", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
         return
     elseif self.state == "next_round" then
+        local screenW, screenH = love.graphics.getDimensions()
+        love.graphics.setBackgroundColor(0, 0, 0)
+        love.graphics.setColor(1, 1, 1)
         local font = love.graphics.newFont(36)
         love.graphics.setFont(font)
-        love.graphics.setColor(0.2, 1, 0.2)
-        love.graphics.printf("Round completo!", 0, screenH/2-60, screenW, "center")
+        love.graphics.printf("Loja", 0, screenH/2-160, screenW, "center")
+        local GameState = require("src.game_state")
+        local coinsText = "Moedas: " .. tostring(GameState.coins or 0)
+        local coinsFont = love.graphics.newFont(22)
+        love.graphics.setFont(coinsFont)
+        love.graphics.print(coinsText, 32, 20)
+        -- Item: Primeira letra
+        if not GameState.showFirstLetter then
+            local itemY = screenH/2 - 40
+            local itemW, itemH = 340, 70
+            local itemX = (screenW - itemW) / 2
+            love.graphics.setColor(0.15, 0.15, 0.2)
+            love.graphics.rectangle("fill", itemX, itemY, itemW, itemH, 14, 14)
+            love.graphics.setColor(1, 1, 1)
+            local itemFont = love.graphics.newFont(24)
+            love.graphics.setFont(itemFont)
+            love.graphics.printf("Primeira letra", itemX, itemY + 10, itemW, "center")
+            local priceFont = love.graphics.newFont(18)
+            love.graphics.setFont(priceFont)
+            love.graphics.printf("Custa: 40 moedas", itemX, itemY + 40, itemW, "center")
+        end
+        -- Botão próximo round
         local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
-        local btnY = screenH/2 + 10
+        local btnY = screenH - btnH - 32
         love.graphics.setColor(0.2, 0.2, 1)
         love.graphics.rectangle("fill", btnX, btnY, btnW, btnH, 12, 12)
         love.graphics.setColor(1, 1, 1)
@@ -156,11 +179,24 @@ function GameScene:mousepressed(x, y, button)
         return
     elseif self.state == "next_round" then
         local screenW, screenH = love.graphics.getDimensions()
+        local GameState = require("src.game_state")
+        -- Item: Primeira letra
+        local itemW, itemH = 340, 70
+        local itemX = (screenW - itemW) / 2
+        local itemY = screenH/2 - 40
+        if x >= itemX and x <= itemX + itemW and y >= itemY and y <= itemY + itemH then
+            if GameState.coins >= 40 and not GameState.showFirstLetter then
+                GameState.coins = GameState.coins - 40
+                GameState.showFirstLetter = true
+            end
+            return
+        end
+        -- Botão próximo round
         local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
-        local btnY = screenH/2 + 10
+        local btnY = screenH - btnH - 32
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
-            self:nextRound()
+            self:goToNextRound()
             return
         end
         return
@@ -237,6 +273,7 @@ function GameScene:checkAnswer()
     if guess == answerNoSpaces then
         self.correctCount = self.correctCount + 1
         if self.correctCount >= 3 then
+            self:finishRound()
             self.state = "next_round"
         else
             self.currentIndex = self.currentIndex + 1
@@ -247,10 +284,12 @@ function GameScene:checkAnswer()
     end
 end
 
-function GameScene:nextRound()
+function GameScene:finishRound()
     local coinsEarned = math.max(0, math.ceil(self.timeLeft))
-    local GameState = require("src.game_state")
     GameState.coins = (GameState.coins or 0) + coinsEarned
+end
+
+function GameScene:goToNextRound()
     self.round = (self.round or 1) + 1
     self.currentIndex = 1
     self.correctCount = 0
