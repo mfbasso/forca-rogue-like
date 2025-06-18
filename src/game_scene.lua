@@ -1,4 +1,5 @@
 local LetterBoxes = require("src.letter_boxes")
+local GameSettings = require("src.game_settings")
 local GameScene = {}
 GameScene.__index = GameScene
 
@@ -45,7 +46,7 @@ function GameScene:setCurrentQuestion()
     local screenW = love.graphics.getWidth()
     self.currentQuestion = q.question
     self.currentAnswer = q.answer
-    self.letterBoxesComponent = LetterBoxes:new(q.answer, screenW, 300)
+    self.letterBoxesComponent = LetterBoxes:new(q.answer, screenW, 300, GameSettings.showFirstLetter)
 end
 
 function GameScene:update(dt)
@@ -64,7 +65,6 @@ function GameScene:draw()
         love.graphics.setFont(font)
         love.graphics.setColor(1, 0.2, 0.2)
         love.graphics.printf("Game Over", 0, screenH/2-60, screenW, "center")
-        -- Novo texto com o round atingido
         local infoFont = love.graphics.newFont(22)
         love.graphics.setFont(infoFont)
         love.graphics.setColor(1, 1, 1)
@@ -231,7 +231,7 @@ function GameScene:checkAnswer()
             self:setCurrentQuestion()
         end
     else
-        self.letterBoxesComponent:setWord(self.currentAnswer)
+        self.letterBoxesComponent:resetWithFirstLetter()
     end
 end
 

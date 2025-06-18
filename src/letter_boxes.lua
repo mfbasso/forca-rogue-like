@@ -2,7 +2,7 @@
 local LetterBoxes = {}
 LetterBoxes.__index = LetterBoxes
 
-function LetterBoxes:new(word, screenWidth, y)
+function LetterBoxes:new(word, screenWidth, y, showFirstLetter)
     local obj = setmetatable({}, self)
     obj.word = word or ""
     obj.letters = {}
@@ -10,23 +10,31 @@ function LetterBoxes:new(word, screenWidth, y)
     obj.screenWidth = screenWidth or 380
     obj.boxSize = 48
     obj.boxSpacing = 12
-    obj:setWord(word)
+    obj.showFirstLetter = showFirstLetter == nil and true or showFirstLetter
+    obj:setWord(word, obj.showFirstLetter)
     return obj
 end
 
-function LetterBoxes:setWord(word)
+function LetterBoxes:setWord(word, showFirstLetter)
     self.word = word or ""
     self.letters = {}
+    self.showFirstLetter = showFirstLetter == nil and self.showFirstLetter or showFirstLetter
     local idx = 1
     for i = 1, #self.word do
         local c = self.word:sub(i, i)
         if c == " " then
             self.letters[idx] = "_SPACE_"
+        elseif self.showFirstLetter and i == 1 then
+            self.letters[idx] = c
         else
             self.letters[idx] = ""
         end
         idx = idx + 1
     end
+end
+
+function LetterBoxes:resetWithFirstLetter()
+    self:setWord(self.word, self.showFirstLetter)
 end
 
 function LetterBoxes:insertLetter(letter)
