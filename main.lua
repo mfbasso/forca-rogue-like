@@ -11,7 +11,8 @@ local function shuffle(tbl)
 end
 
 local function startGame()
-    currentScene = GameScene:new(allQuestions, 1)
+    local seed = tostring(os.time()) .. tostring(math.random(100000,999999))
+    currentScene = GameScene:new(allQuestions, 1, seed)
 end
 
 function love.load()

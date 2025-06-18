@@ -1,12 +1,15 @@
 local LetterBoxes = require("src.letter_boxes")
 local GameSettings = require("src.game_settings")
+local question_selector = require("src/utils/question_selector")
 local GameScene = {}
 GameScene.__index = GameScene
 
-function GameScene:new(allQuestions, round)
+function GameScene:new(allQuestions, round, seed)
     local obj = setmetatable({}, self)
     obj.allQuestions = allQuestions
     obj.round = round or 1
+    obj.seed = seed or tostring(os.time())
+    obj.perguntasUsadas = {}
     obj.questions = obj:selectQuestionsForRound()
     obj.currentIndex = 1
     obj.correctCount = 0
@@ -18,18 +21,19 @@ function GameScene:new(allQuestions, round)
 end
 
 function GameScene:selectQuestionsForRound()
-    local allQuestions = self.allQuestions or {}
     local questions = {}
-    -- Embaralha as perguntas para garantir aleatoriedade
-    local indices = {}
-    for i = 1, #allQuestions do table.insert(indices, i) end
-    math.randomseed(os.time() + (self.round or 1) * 1000 + math.random(1000000))
-    for i = #indices, 2, -1 do
-        local j = math.random(i)
-        indices[i], indices[j] = indices[j], indices[i]
-    end
-    for i = 1, math.min(3, #indices) do
-        table.insert(questions, allQuestions[indices[i]])
+    local tries = 0
+    local allowRepeat = require("src.game_settings").repeatQuestions
+    while #questions < 3 and tries < 100 do
+        local q = question_selector.select_question(self.round or 1, tonumber(self.seed) + #questions * 100 + tries * 1000)
+        local chave = q.question .. "|" .. q.answer .. "|" .. tostring(q.level)
+        if allowRepeat or not self.perguntasUsadas[chave] then
+            if not allowRepeat then
+                self.perguntasUsadas[chave] = true
+            end
+            table.insert(questions, q)
+        end
+        tries = tries + 1
     end
     return questions
 end
@@ -60,6 +64,10 @@ end
 function GameScene:draw()
     local screenW, screenH = love.graphics.getDimensions()
     love.graphics.setBackgroundColor(0, 0, 0)
+    love.graphics.setColor(1, 1, 1)
+    local seedText = "Seed: " .. tostring(self.seed or "-")
+    love.graphics.setFont(love.graphics.newFont(14))
+    love.graphics.print(seedText, screenW - 180, screenH - 30)
     if self.state == "gameover" then
         local font = love.graphics.newFont(36)
         love.graphics.setFont(font)
@@ -131,6 +139,7 @@ function GameScene:mousepressed(x, y, button)
             self.correctCount = 0
             self.timeLeft = 30
             self.state = "playing"
+            self.seed = tostring(os.time()) .. tostring(math.random(100000,999999))
             self.questions = self:selectQuestionsForRound()
             self:setCurrentQuestion()
             return
