@@ -1,6 +1,7 @@
-local GameSettings = {
+local GameState = {
     showFirstLetter = true,
     repeatQuestions = false,
+    coins = 0,
 }
 
-return GameSettings
+return GameState

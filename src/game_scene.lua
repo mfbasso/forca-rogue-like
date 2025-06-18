@@ -1,5 +1,5 @@
 local LetterBoxes = require("src.letter_boxes")
-local GameSettings = require("src.game_settings")
+local GameState = require("src.game_state")
 local question_selector = require("src/utils/question_selector")
 local keyboard = require("src.virtual_keyboard")
 local randomSeed = require("src.utils.random_seed")
@@ -25,7 +25,7 @@ end
 function GameScene:selectQuestionsForRound()
     local questions = {}
     local tries = 0
-    local allowRepeat = require("src.game_settings").repeatQuestions
+    local allowRepeat = require("src.game_state").repeatQuestions
     local seedNum = 0
     for i = 1, #self.seed do
         seedNum = seedNum + string.byte(self.seed, i)
@@ -56,7 +56,7 @@ function GameScene:setCurrentQuestion()
     local screenW = love.graphics.getWidth()
     self.currentQuestion = q.question
     self.currentAnswer = q.answer
-    self.letterBoxesComponent = LetterBoxes:new(q.answer, screenW, 300, GameSettings.showFirstLetter)
+    self.letterBoxesComponent = LetterBoxes:new(q.answer, screenW, 300, GameState.showFirstLetter)
 end
 
 function GameScene:update(dt)
@@ -118,6 +118,7 @@ function GameScene:draw()
     local font = love.graphics.newFont(22)
     love.graphics.setFont(font)
     love.graphics.setColor(1, 1, 1)
+    love.graphics.print("Moedas: " .. tostring(GameState.coins), 32, 60)
     -- Quebra o texto da pergunta para caber na tela
     local questionText = self.currentQuestion or ""
     local maxWidth = screenW - 64
@@ -148,6 +149,8 @@ function GameScene:mousepressed(x, y, button)
             self.seed = randomSeed.randomSeedString(6)
             self.questions = self:selectQuestionsForRound()
             self:setCurrentQuestion()
+            local GameState = require("src.game_state")
+            GameState.coins = 0
             return
         end
         return
@@ -157,14 +160,7 @@ function GameScene:mousepressed(x, y, button)
         local btnX = (screenW - btnW) / 2
         local btnY = screenH/2 + 10
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
-            self.round = (self.round or 1) + 1
-            self.currentIndex = 1
-            self.correctCount = 0
-            self.timeLeft = 30
-            self.state = "playing"
-            -- Sorteia novas perguntas para o novo round
-            self.questions = self:selectQuestionsForRound()
-            self:setCurrentQuestion()
+            self:nextRound()
             return
         end
         return
@@ -249,6 +245,19 @@ function GameScene:checkAnswer()
     else
         self.letterBoxesComponent:resetWithFirstLetter()
     end
+end
+
+function GameScene:nextRound()
+    local coinsEarned = math.max(0, math.ceil(self.timeLeft))
+    local GameState = require("src.game_state")
+    GameState.coins = (GameState.coins or 0) + coinsEarned
+    self.round = (self.round or 1) + 1
+    self.currentIndex = 1
+    self.correctCount = 0
+    self.timeLeft = 30
+    self.state = "playing"
+    self.questions = self:selectQuestionsForRound()
+    self:setCurrentQuestion()
 end
 
 return GameScene
