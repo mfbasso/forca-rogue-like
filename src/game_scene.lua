@@ -288,6 +288,16 @@ function GameScene:mousepressed(x, y, button)
             end
         end
     end
+    local boxRects = self.letterBoxesComponent:getBoxRects()
+    for i, rect in ipairs(boxRects) do
+        if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
+            local removed = self.letterBoxesComponent:removeLetterAt(i)
+            if removed then
+                keyboard.restoreLetter(removed)
+            end
+            return
+        end
+    end
     -- Botão de apagar
     local eraseX, eraseY, eraseW, eraseH = keyboard.getEraseButtonRect(screenW, screenH)
     if x >= eraseX and x <= eraseX + eraseW and y >= eraseY and y <= eraseY + eraseH then

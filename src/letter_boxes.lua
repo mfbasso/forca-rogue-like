@@ -61,6 +61,38 @@ function LetterBoxes:removeLastLetter()
     return nil
 end
 
+function LetterBoxes:getBoxRects()
+    local n = #self.letters
+    if n == 0 then return {} end
+    local maxWidth = self.screenWidth * 0.92
+    local boxSize = self.boxSize
+    local boxSpacing = self.boxSpacing
+    local totalWidth = n * boxSize + (n - 1) * boxSpacing
+    if totalWidth > maxWidth then
+        boxSize = math.floor((maxWidth - (n - 1) * boxSpacing) / n)
+        if boxSize < 24 then boxSize = 24 end
+    end
+    local startX = (self.screenWidth - (n * boxSize + (n - 1) * boxSpacing)) / 2
+    local rects = {}
+    for i = 1, n do
+        local x = startX + (i - 1) * (boxSize + boxSpacing)
+        rects[i] = {x = x, y = self.y, w = boxSize, h = boxSize}
+    end
+    return rects
+end
+
+function LetterBoxes:removeLetterAt(index)
+    if self.letters[index] ~= "" and self.letters[index] ~= "_SPACE_" then
+        if self.showFirstLetter and index == 1 then
+            return nil
+        end
+        local removed = self.letters[index]
+        self.letters[index] = ""
+        return removed
+    end
+    return nil
+end
+
 function LetterBoxes:draw()
     local n = #self.letters
     if n == 0 then return end

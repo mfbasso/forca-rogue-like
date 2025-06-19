@@ -7,8 +7,8 @@ keyboard.rows = {
     {"A", "S", "D", "F", "G", "H", "J", "K", "L"},
     {"Z", "X", "C", "V", "B", "N", "M"}
 }
-keyboard.boxSize = 32
-keyboard.boxSpacing = 4
+keyboard.boxSize = 40
+keyboard.boxSpacing = 10
 keyboard.availableLetters = nil
 keyboard.originalLetters = nil
 keyboard.lettersState = nil
@@ -142,7 +142,7 @@ function keyboard.draw(screenWidth, screenHeight)
     local boxSpacing = keyboard.boxSpacing
     local totalHeight = numRows * boxSize + (numRows - 1) * boxSpacing
     local startY = screenHeight - totalHeight - 32 - (screenHeight * 0.1)
-    local font = love.graphics.newFont(20)
+    local font = love.graphics.newFont(28) -- fonte maior
     local globalIndex = 1
     for rowIdx, row in ipairs(rows) do
         local boxes = #row
