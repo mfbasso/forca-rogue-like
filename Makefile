@@ -9,9 +9,12 @@ build:
 	@zip -9 -r forca-rogue-like.love . -x "web/*" -x "*.love" -x "*.DS_Store" -x "Makefile" -x "*.md" -x "*/.git*" -x "*/__pycache__/*"
 
 lovejs: build
-	@echo "Copiando forca-rogue-like.love para web/game.love..."
-	@cp forca-rogue-like.love web/game.love
-	@echo "Pronto! Agora coloque os arquivos do love.js em web/ e abra o index.html."
+	@echo "Gerando nome aleatório para o arquivo .love..."
+	@export RAND_NAME=$(shell date +%Y%m%d%H%M%S).love; \
+	cp forca-rogue-like.love web/$$RAND_NAME; \
+	sed -i.bak "s/game.love/$$RAND_NAME/g" web/index.html; \
+	echo "Arquivo copiado para web/$$RAND_NAME e index.html atualizado."; \
+	rm -f web/index.html.bak
 
 watch:
 	love --console --watch .
