@@ -305,12 +305,24 @@ end
 function GameScene:keypressed(key)
     if self.state ~= "playing" then return end
     if key == "backspace" then
-        self.letterBoxesComponent:removeLastLetter()
+        local removed = self.letterBoxesComponent:removeLastLetter()
+        if removed then
+            keyboard.restoreLetter(removed)
+        end
         return
     end
     if #key == 1 then
         local upper = string.upper(key)
-        if upper:match("^[A-ZÁÉÍÓÚÃÕÇ]$") then
+        -- Só permite digitar se a letra está disponível no teclado virtual
+        local found = false
+        for i, obj in ipairs(keyboard.lettersState or {}) do
+            if obj.letter == upper and obj.available then
+                found = true
+                obj.available = false
+                break
+            end
+        end
+        if found then
             self.letterBoxesComponent:insertLetter(upper)
             playTypeSound()
             self:checkAnswer()

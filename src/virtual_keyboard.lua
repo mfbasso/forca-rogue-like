@@ -117,23 +117,50 @@ end
 
 function keyboard.draw(screenWidth, screenHeight)
     local letters = keyboard.lettersState or {}
-    local boxes = #letters
-    if boxes == 0 then return end
-    local totalWidth = boxes * keyboard.boxSize + (boxes - 1) * keyboard.boxSpacing
-    local startX = (screenWidth - totalWidth) / 2
-    local y = screenHeight - keyboard.boxSize - 32 - (screenHeight * 0.1)
-    for i, obj in ipairs(letters) do
-        if obj.available then
-            local x = startX + (i - 1) * (keyboard.boxSize + keyboard.boxSpacing)
-            love.graphics.setColor(1, 1, 1)
-            love.graphics.rectangle("fill", x, y, keyboard.boxSize, keyboard.boxSize, 8, 8)
-            love.graphics.setColor(0, 0, 0)
-            local letterFont = love.graphics.newFont(20)
-            love.graphics.setFont(letterFont)
-            local letter = obj.letter
-            local letterWidth = letterFont:getWidth(letter)
-            local letterHeight = letterFont:getHeight()
-            love.graphics.print(letter, x + (keyboard.boxSize - letterWidth) / 2, y + (keyboard.boxSize - letterHeight) / 2)
+    local total = #letters
+    if total == 0 then return end
+    local rows = {}
+    if total > 7 then
+        local half = math.ceil(total / 2)
+        for i = 1, half do
+            table.insert(rows, {letters[i]})
+        end
+        for i = half + 1, total do
+            if not rows[i - half] then rows[i - half] = {} end
+            table.insert(rows[i - half], letters[i])
+        end
+        -- Reorganiza para duas linhas
+        local row1, row2 = {}, {}
+        for i = 1, half do table.insert(row1, letters[i]) end
+        for i = half + 1, total do table.insert(row2, letters[i]) end
+        rows = {row1, row2}
+    else
+        rows = {letters}
+    end
+    local numRows = #rows
+    local boxSize = keyboard.boxSize
+    local boxSpacing = keyboard.boxSpacing
+    local totalHeight = numRows * boxSize + (numRows - 1) * boxSpacing
+    local startY = screenHeight - totalHeight - 32 - (screenHeight * 0.1)
+    local font = love.graphics.newFont(20)
+    for rowIdx, row in ipairs(rows) do
+        local boxes = #row
+        local totalWidth = boxes * boxSize + (boxes - 1) * boxSpacing
+        local startX = (screenWidth - totalWidth) / 2
+        local y = startY + (rowIdx - 1) * (boxSize + boxSpacing)
+        for i = 1, boxes do
+            local obj = row[i]
+            if obj and obj.available then
+                local x = startX + (i - 1) * (boxSize + boxSpacing)
+                love.graphics.setColor(1, 1, 1)
+                love.graphics.rectangle("fill", x, y, boxSize, boxSize, 8, 8)
+                love.graphics.setColor(0, 0, 0)
+                love.graphics.setFont(font)
+                local letter = obj.letter
+                local letterWidth = font:getWidth(letter)
+                local letterHeight = font:getHeight()
+                love.graphics.print(letter, x + (boxSize - letterWidth) / 2, y + (boxSize - letterHeight) / 2)
+            end
         end
     end
     -- Botão de apagar

@@ -1,5 +1,5 @@
 local GameState = {
-    showFirstLetter = false,
+    showFirstLetter = true,
     repeatQuestions = false,
     coins = 0,
     roundTime = 45,

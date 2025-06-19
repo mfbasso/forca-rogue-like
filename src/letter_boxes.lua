@@ -49,6 +49,10 @@ end
 function LetterBoxes:removeLastLetter()
     for i = #self.letters, 1, -1 do
         if self.letters[i] ~= "" and self.letters[i] ~= "_SPACE_" then
+            -- Se showFirstLetter está ativo e é a primeira letra, não apaga
+            if self.showFirstLetter and i == 1 then
+                return nil
+            end
             local removed = self.letters[i]
             self.letters[i] = ""
             return removed
