@@ -142,7 +142,7 @@ function keyboard.draw(screenWidth, screenHeight)
     local boxSpacing = keyboard.boxSpacing
     local totalHeight = numRows * boxSize + (numRows - 1) * boxSpacing
     local startY = screenHeight - totalHeight - 32 - (screenHeight * 0.1)
-    local font = love.graphics.newFont(28) -- fonte maior
+    local font = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 28)
     local globalIndex = 1
     for rowIdx, row in ipairs(rows) do
         local boxes = #row
@@ -170,13 +170,13 @@ function keyboard.draw(screenWidth, screenHeight)
     love.graphics.setColor(1, 0.3, 0.3)
     love.graphics.rectangle("fill", eraseX, eraseY, eraseW, eraseH, 8, 8)
     love.graphics.setColor(1, 1, 1)
-    local eraseFont = love.graphics.newFont(18)
+    local eraseFont = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 18)
     love.graphics.setFont(eraseFont)
     local eraseText = "Apagar"
     local eraseTextW = eraseFont:getWidth(eraseText)
     local eraseTextH = eraseFont:getHeight()
     love.graphics.print(eraseText, eraseX + (eraseW - eraseTextW) / 2, eraseY + (eraseH - eraseTextH) / 2)
-    love.graphics.setFont(love.graphics.newFont(12))
+    love.graphics.setFont(love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 12))
     love.graphics.setColor(1, 1, 1)
 end
 

@@ -8,11 +8,11 @@ GameScene.__index = GameScene
 
 -- Font cache (performance improvement)
 local fontCache = {
-    font14 = love.graphics.newFont(14),
-    font18 = love.graphics.newFont(18),
-    font22 = love.graphics.newFont(22),
-    font24 = love.graphics.newFont(24),
-    font36 = love.graphics.newFont(36),
+    font14 = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 14),
+    font18 = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 18),
+    font22 = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 22),
+    font24 = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 24),
+    font36 = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 36),
 }
 
 local typeSound = love.audio.newSource("assets/sounds/type.mp3", "static")

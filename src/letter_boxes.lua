@@ -106,7 +106,7 @@ function LetterBoxes:draw()
         if boxSize < 24 then boxSize = 24 end
     end
     local startX = (self.screenWidth - (n * boxSize + (n - 1) * boxSpacing)) / 2
-    local font = love.graphics.newFont(26)
+    local font = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 26)
     for i = 1, n do
         local x = startX + (i - 1) * (boxSize + boxSpacing)
         if self.letters[i] == "_SPACE_" then
