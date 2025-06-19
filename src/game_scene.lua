@@ -6,12 +6,32 @@ local randomSeed = require("src.utils.random_seed")
 local GameScene = {}
 GameScene.__index = GameScene
 
+-- Font cache (performance improvement)
+local fontCache = {
+    font14 = love.graphics.newFont(14),
+    font18 = love.graphics.newFont(18),
+    font22 = love.graphics.newFont(22),
+    font24 = love.graphics.newFont(24),
+    font36 = love.graphics.newFont(36),
+}
+
+local function resetGameState()
+    GameState.coins = 0
+    GameState.showFirstLetter = false
+    GameState.plusTimeBought = false
+    GameState.roundTime = 30
+end
+
 function GameScene:new(allQuestions, round, seed)
     local obj = setmetatable({}, self)
     obj.allQuestions = allQuestions
     obj.round = round or 1
     obj.seed = seed or randomSeed.randomSeedString(6)
     obj.usedQuestions = {}
+    obj.seedNum = 0
+    for i = 1, #obj.seed do
+        obj.seedNum = obj.seedNum + string.byte(obj.seed, i)
+    end
     obj.questions = obj:selectQuestionsForRound()
     obj.currentIndex = 1
     obj.correctCount = 0
@@ -25,13 +45,9 @@ end
 function GameScene:selectQuestionsForRound()
     local questions = {}
     local tries = 0
-    local allowRepeat = require("src.game_state").repeatQuestions
-    local seedNum = 0
-    for i = 1, #self.seed do
-        seedNum = seedNum + string.byte(self.seed, i)
-    end
+    local allowRepeat = GameState.repeatQuestions
     while #questions < 3 and tries < 100 do
-        local q = question_selector.select_question(self.round or 1, seedNum + #questions * 100 + tries * 1000)
+        local q = question_selector.select_question(self.round or 1, self.seedNum + #questions * 100 + tries * 1000)
         local key = q.question .. "|" .. q.answer .. "|" .. tostring(q.level)
         if allowRepeat or not self.usedQuestions[key] then
             if not allowRepeat then
@@ -52,7 +68,6 @@ function GameScene:setCurrentQuestion()
         end
         return
     end
-    local LetterBoxes = require("src.letter_boxes")
     local screenW = love.graphics.getWidth()
     self.currentQuestion = q.question
     self.currentAnswer = q.answer
@@ -72,15 +87,13 @@ function GameScene:draw()
     love.graphics.setBackgroundColor(0, 0, 0)
     love.graphics.setColor(1, 1, 1)
     local seedText = "Seed: " .. tostring(self.seed or "-")
-    love.graphics.setFont(love.graphics.newFont(14))
+    love.graphics.setFont(fontCache.font14)
     love.graphics.print(seedText, screenW - 120, screenH - 30)
     if self.state == "gameover" then
-        local font = love.graphics.newFont(36)
-        love.graphics.setFont(font)
+        love.graphics.setFont(fontCache.font36)
         love.graphics.setColor(1, 0.2, 0.2)
         love.graphics.printf("Game Over", 0, screenH/2-60, screenW, "center")
-        local infoFont = love.graphics.newFont(22)
-        love.graphics.setFont(infoFont)
+        love.graphics.setFont(fontCache.font22)
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf("Você chegou até o round " .. tostring(self.round or 1), 0, screenH/2-10, screenW, "center")
         local btnW, btnH = 220, 48
@@ -89,21 +102,16 @@ function GameScene:draw()
         love.graphics.setColor(0.2, 0.2, 1)
         love.graphics.rectangle("fill", btnX, btnY, btnW, btnH, 12, 12)
         love.graphics.setColor(1, 1, 1)
-        local btnFont = love.graphics.newFont(24)
-        love.graphics.setFont(btnFont)
-        love.graphics.printf("Jogar novamente", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
+        love.graphics.setFont(fontCache.font24)
+        love.graphics.printf("Jogar novamente", btnX, btnY + (btnH - fontCache.font24:getHeight())/2, btnW, "center")
         return
     elseif self.state == "next_round" then
-        local screenW, screenH = love.graphics.getDimensions()
         love.graphics.setBackgroundColor(0, 0, 0)
         love.graphics.setColor(1, 1, 1)
-        local font = love.graphics.newFont(36)
-        love.graphics.setFont(font)
+        love.graphics.setFont(fontCache.font36)
         love.graphics.printf("Loja", 0, screenH/2-160, screenW, "center")
-        local GameState = require("src.game_state")
         local coinsText = "Moedas: " .. tostring(GameState.coins or 0)
-        local coinsFont = love.graphics.newFont(22)
-        love.graphics.setFont(coinsFont)
+        love.graphics.setFont(fontCache.font22)
         love.graphics.print(coinsText, 32, 20)
         -- Item: Primeira letra
         if not GameState.showFirstLetter then
@@ -113,11 +121,9 @@ function GameScene:draw()
             love.graphics.setColor(0.15, 0.15, 0.2)
             love.graphics.rectangle("fill", itemX, itemY, itemW, itemH, 14, 14)
             love.graphics.setColor(1, 1, 1)
-            local itemFont = love.graphics.newFont(24)
-            love.graphics.setFont(itemFont)
+            love.graphics.setFont(fontCache.font24)
             love.graphics.printf("Primeira letra", itemX, itemY + 10, itemW, "center")
-            local priceFont = love.graphics.newFont(18)
-            love.graphics.setFont(priceFont)
+            love.graphics.setFont(fontCache.font18)
             love.graphics.printf("Custa: 40 moedas", itemX, itemY + 40, itemW, "center")
         end
         -- Item: +10 segundos
@@ -128,11 +134,9 @@ function GameScene:draw()
             love.graphics.setColor(0.15, 0.2, 0.15)
             love.graphics.rectangle("fill", plusTimeX, plusTimeY, plusTimeW, plusTimeH, 14, 14)
             love.graphics.setColor(1, 1, 1)
-            local plusTimeFont = love.graphics.newFont(24)
-            love.graphics.setFont(plusTimeFont)
+            love.graphics.setFont(fontCache.font24)
             love.graphics.printf("+10 segundos", plusTimeX, plusTimeY + 10, plusTimeW, "center")
-            local plusTimePriceFont = love.graphics.newFont(18)
-            love.graphics.setFont(plusTimePriceFont)
+            love.graphics.setFont(fontCache.font18)
             love.graphics.printf("Custa: 60 moedas", plusTimeX, plusTimeY + 40, plusTimeW, "center")
         end
         -- Botão próximo round
@@ -142,19 +146,16 @@ function GameScene:draw()
         love.graphics.setColor(0.2, 0.2, 1)
         love.graphics.rectangle("fill", btnX, btnY, btnW, btnH, 12, 12)
         love.graphics.setColor(1, 1, 1)
-        local btnFont = love.graphics.newFont(24)
-        love.graphics.setFont(btnFont)
-        love.graphics.printf("Ir para o próximo round", btnX, btnY + (btnH - btnFont:getHeight())/2, btnW, "center")
+        love.graphics.setFont(fontCache.font24)
+        love.graphics.printf("Ir para o próximo round", btnX, btnY + (btnH - fontCache.font24:getHeight())/2, btnW, "center")
         return
     elseif self.state == "win" then
-        local font = love.graphics.newFont(36)
-        love.graphics.setFont(font)
+        love.graphics.setFont(fontCache.font36)
         love.graphics.setColor(0.2, 1, 0.2)
         love.graphics.printf("Congratulations!", 0, screenH/2-40, screenW, "center")
         return
     end
-    local font = love.graphics.newFont(22)
-    love.graphics.setFont(font)
+    love.graphics.setFont(fontCache.font22)
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("Moedas: " .. tostring(GameState.coins), 32, 60)
     -- Quebra o texto da pergunta para caber na tela
@@ -163,8 +164,7 @@ function GameScene:draw()
     love.graphics.printf(questionText, 32, 180, maxWidth, "center")
     self.letterBoxesComponent:draw()
     keyboard.draw(screenW, screenH)
-    local timerFont = love.graphics.newFont(18)
-    love.graphics.setFont(timerFont)
+    love.graphics.setFont(fontCache.font18)
     love.graphics.setColor(1, 1, 0.2)
     love.graphics.print("Time: " .. math.ceil(self.timeLeft), screenW - 120, 20)
     love.graphics.setColor(1, 1, 1)
@@ -179,22 +179,25 @@ function GameScene:mousepressed(x, y, button)
         local btnX = (screenW - btnW) / 2
         local btnY = screenH/2 + 10
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
+            resetGameState()
             self.round = 1
             self.currentIndex = 1
             self.correctCount = 0
             self.timeLeft = GameState.roundTime
             self.state = "playing"
             self.seed = randomSeed.randomSeedString(6)
+            self.usedQuestions = {}
+            self.seedNum = 0
+            for i = 1, #self.seed do
+                self.seedNum = self.seedNum + string.byte(self.seed, i)
+            end
             self.questions = self:selectQuestionsForRound()
             self:setCurrentQuestion()
-            local GameState = require("src.game_state")
-            GameState.coins = 0
             return
         end
         return
     elseif self.state == "next_round" then
         local screenW, screenH = love.graphics.getDimensions()
-        local GameState = require("src.game_state")
         -- Item: Primeira letra
         local itemW, itemH = 340, 70
         local itemX = (screenW - itemW) / 2
@@ -211,7 +214,7 @@ function GameScene:mousepressed(x, y, button)
         local plusTimeX = (screenW - plusTimeW) / 2
         local plusTimeY = screenH/2 + 50
         if x >= plusTimeX and x <= plusTimeX + plusTimeW and y >= plusTimeY and y <= plusTimeY + plusTimeH then
-            if GameState.coins >= 60 then
+            if GameState.coins >= 60 and not GameState.plusTimeBought then
                 GameState.coins = GameState.coins - 60
                 GameState.roundTime = GameState.roundTime + 10
                 GameState.plusTimeBought = true
@@ -254,21 +257,6 @@ function GameScene:mousepressed(x, y, button)
     if x >= eraseX and x <= eraseX + eraseW and y >= eraseY and y <= eraseY + eraseH then
         self.letterBoxesComponent:removeLastLetter()
         return
-    end
-    if self.state == "gameover" then
-        local btnW, btnH = 220, 48
-        local btnX = (screenW - btnW) / 2
-        local btnY = screenH/2 + 10
-        if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
-            -- Reset game
-            local newGame = GameScene:new(self.questions)
-            newGame.correctCount = 0
-            newGame.currentIndex = 1
-            newGame.timeLeft = GameState.roundTime
-            newGame.state = "playing"
-            newGame:setCurrentQuestion()
-            return newGame
-        end
     end
 end
 
