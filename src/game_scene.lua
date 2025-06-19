@@ -177,7 +177,7 @@ function GameScene:mousepressed(x, y, button)
         local screenW, screenH = love.graphics.getDimensions()
         local btnW, btnH = 220, 48
         local btnX = (screenW - btnW) / 2
-        local btnY = screenH/2 + 10
+        local btnY = screenH/2 + 40
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
             resetGameState()
             self.round = 1
