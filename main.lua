@@ -3,6 +3,7 @@ local MenuScene = require("src.menu_scene")
 local currentScene
 local allQuestions = require("src.questions")
 local randomSeed = require("src.utils.random_seed")
+local backgroundMusic = require("src.utils.background_music")
 
 local function shuffle(tbl)
     for i = #tbl, 2, -1 do
@@ -20,6 +21,7 @@ function love.load()
     if not keyboard then
         keyboard = require("src.virtual_keyboard")
     end
+    backgroundMusic.playBackgroundMusic()
     currentScene = MenuScene:new(startGame)
 end
 

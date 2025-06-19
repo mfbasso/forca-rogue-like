@@ -15,6 +15,39 @@ local fontCache = {
     font36 = love.graphics.newFont(36),
 }
 
+local typeSound = love.audio.newSource("assets/sounds/type.mp3", "static")
+local failSound = love.audio.newSource("assets/sounds/fail.mp3", "static")
+local successSound = love.audio.newSource("assets/sounds/success.wav", "static")
+local powerupSound = love.audio.newSource("assets/sounds/powerup.wav", "static")
+
+local function playTypeSound()
+    if typeSound then
+        typeSound:stop()
+        typeSound:play()
+    end
+end
+
+local function playFailSound()
+    if failSound then
+        failSound:stop()
+        failSound:play()
+    end
+end
+
+local function playSuccessSound()
+    if successSound then
+        successSound:stop()
+        successSound:play()
+    end
+end
+
+local function playPowerupSound()
+    if powerupSound then
+        powerupSound:stop()
+        powerupSound:play()
+    end
+end
+
 local function resetGameState()
     GameState.coins = 0
     GameState.showFirstLetter = false
@@ -206,6 +239,7 @@ function GameScene:mousepressed(x, y, button)
             if GameState.coins >= 40 and not GameState.showFirstLetter then
                 GameState.coins = GameState.coins - 40
                 GameState.showFirstLetter = true
+                playPowerupSound()
             end
             return
         end
@@ -218,6 +252,7 @@ function GameScene:mousepressed(x, y, button)
                 GameState.coins = GameState.coins - 60
                 GameState.roundTime = GameState.roundTime + 10
                 GameState.plusTimeBought = true
+                playPowerupSound()
             end
             return
         end
@@ -232,7 +267,7 @@ function GameScene:mousepressed(x, y, button)
         return
     end
     if self.state ~= "playing" then return end
-    local screenW, screenH = love.graphics.getDimensions()
+    local screenW = love.graphics.getDimensions()
     local kb = keyboard
     local numRows = #kb.rows
     local totalHeight = numRows * kb.boxSize + (numRows - 1) * kb.boxSpacing
@@ -248,6 +283,7 @@ function GameScene:mousepressed(x, y, button)
             if x >= xk and x <= xk + kb.boxSize and y >= yk and y <= yk + kb.boxSize then
                 local letter = row[i]
                 self.letterBoxesComponent:insertLetter(letter)
+                playTypeSound()
                 self:checkAnswer()
                 return
             end
@@ -270,6 +306,7 @@ function GameScene:keypressed(key)
         local upper = string.upper(key)
         if upper:match("^[A-ZÁÉÍÓÚÃÕÇ]$") then
             self.letterBoxesComponent:insertLetter(upper)
+            playTypeSound()
             self:checkAnswer()
         end
     end
@@ -286,6 +323,7 @@ function GameScene:checkAnswer()
     local answerNoSpaces = (self.currentAnswer or ""):gsub(" ", "")
     if #guess < #answerNoSpaces then return end
     if guess == answerNoSpaces then
+        playSuccessSound()
         self.correctCount = self.correctCount + 1
         if self.correctCount >= 3 then
             self:finishRound()
@@ -295,6 +333,7 @@ function GameScene:checkAnswer()
             self:setCurrentQuestion()
         end
     else
+        playFailSound()
         self.letterBoxesComponent:resetWithFirstLetter()
     end
 end
