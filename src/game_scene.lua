@@ -320,6 +320,7 @@ function GameScene:goToNextRound()
     self.round = (self.round or 1) + 1
     self.currentIndex = 1
     self.correctCount = 0
+    GameState.roundTime = math.max(10, GameState.roundTime - 3)
     self.timeLeft = GameState.roundTime
     self.state = "playing"
     self.questions = self:selectQuestionsForRound()
