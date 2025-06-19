@@ -49,10 +49,12 @@ end
 function LetterBoxes:removeLastLetter()
     for i = #self.letters, 1, -1 do
         if self.letters[i] ~= "" and self.letters[i] ~= "_SPACE_" then
+            local removed = self.letters[i]
             self.letters[i] = ""
-            break
+            return removed
         end
     end
+    return nil
 end
 
 function LetterBoxes:draw()

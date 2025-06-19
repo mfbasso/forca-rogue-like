@@ -105,6 +105,7 @@ function GameScene:setCurrentQuestion()
     self.currentQuestion = q.question
     self.currentAnswer = q.answer
     self.letterBoxesComponent = LetterBoxes:new(q.answer, screenW, 300, GameState.showFirstLetter)
+    keyboard.setAvailableLetters(q.answer, self.seedNum)
 end
 
 function GameScene:update(dt)
@@ -267,31 +268,36 @@ function GameScene:mousepressed(x, y, button)
         return
     end
     if self.state ~= "playing" then return end
-    local screenW = love.graphics.getDimensions()
-    local kb = keyboard
-    local numRows = #kb.rows
-    local totalHeight = numRows * kb.boxSize + (numRows - 1) * kb.boxSpacing
-    -- Raise the keyboard by 10% of the screen (igual ao desenho)
-    local startY = screenH - totalHeight - 32 - (screenH * 0.1)
-    for rowIdx, row in ipairs(kb.rows) do
-        local boxes = #row
-        local totalWidth = boxes * kb.boxSize + (boxes - 1) * kb.boxSpacing
+    local screenW = love.graphics.getWidth()
+    local screenH = love.graphics.getHeight()
+    -- Clique nas letras (linha única, pode ter letras repetidas)
+    local letters = keyboard.lettersState or {}
+    local boxes = #letters
+    if boxes > 0 then
+        local totalWidth = boxes * keyboard.boxSize + (boxes - 1) * keyboard.boxSpacing
         local startX = (screenW - totalWidth) / 2
-        local yk = startY + (rowIdx - 1) * (kb.boxSize + kb.boxSpacing)
-        for i = 1, boxes do
-            local xk = startX + (i - 1) * (kb.boxSize + kb.boxSpacing)
-            if x >= xk and x <= xk + kb.boxSize and y >= yk and y <= yk + kb.boxSize then
-                local letter = row[i]
-                self.letterBoxesComponent:insertLetter(letter)
-                playTypeSound()
-                self:checkAnswer()
-                return
+        local y = screenH - keyboard.boxSize - 32 - (screenH * 0.1)
+        for i, obj in ipairs(letters) do
+            if obj.available then
+                local xk = startX + (i - 1) * (keyboard.boxSize + keyboard.boxSpacing)
+                if x >= xk and x <= xk + keyboard.boxSize and y >= y and y <= y + keyboard.boxSize then
+                    local letter = obj.letter
+                    self.letterBoxesComponent:insertLetter(letter)
+                    keyboard.useLetter(letter)
+                    playTypeSound()
+                    self:checkAnswer()
+                    return
+                end
             end
         end
     end
+    -- Botão de apagar
     local eraseX, eraseY, eraseW, eraseH = keyboard.getEraseButtonRect(screenW, screenH)
     if x >= eraseX and x <= eraseX + eraseW and y >= eraseY and y <= eraseY + eraseH then
-        self.letterBoxesComponent:removeLastLetter()
+        local removed = self.letterBoxesComponent:removeLastLetter()
+        if removed then
+            keyboard.restoreLetter(removed)
+        end
         return
     end
 end
@@ -331,10 +337,12 @@ function GameScene:checkAnswer()
         else
             self.currentIndex = self.currentIndex + 1
             self:setCurrentQuestion()
+            keyboard.resetLetters(self.seedNum)
         end
     else
         playFailSound()
         self.letterBoxesComponent:resetWithFirstLetter()
+        keyboard.resetLetters(self.seedNum)
     end
 end
 

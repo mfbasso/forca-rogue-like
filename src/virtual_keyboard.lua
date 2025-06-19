@@ -1,5 +1,6 @@
 -- Virtual keyboard for the game screen
 local keyboard = {}
+local GameState = require("src.game_state")
 
 keyboard.rows = {
     {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"},
@@ -8,24 +9,128 @@ keyboard.rows = {
 }
 keyboard.boxSize = 32
 keyboard.boxSpacing = 4
+keyboard.availableLetters = nil
+keyboard.originalLetters = nil
+keyboard.lettersState = nil
+
+local function seededRandom(seed)
+    local m = 2^32
+    local a = 1664525
+    local c = 1013904223
+    local state = seed or os.time()
+    return function()
+        state = (a * state + c) % m
+        return state / m
+    end
+end
+
+function keyboard.shuffleLetters(seed)
+    if not keyboard.originalLetters then return end
+    local unpack = unpack -- compatibilidade Lua 5.1
+    local letters = {unpack(keyboard.originalLetters)}
+    local rand = seededRandom(seed)
+    for i = #letters, 2, -1 do
+        local j = math.floor(rand() * i) + 1
+        letters[i], letters[j] = letters[j], letters[i]
+    end
+    keyboard.lettersState = {}
+    for i, l in ipairs(letters) do
+        keyboard.lettersState[i] = {letter = l, available = true}
+    end
+end
+
+function keyboard.setAvailableLetters(answer, seed)
+    -- Cria lista de letras (com repetições, sem espaços)
+    local letters = {}
+    answer = answer:gsub(" ", "")
+    for i = 1, #answer do
+        local c = answer:sub(i, i):upper()
+        table.insert(letters, c)
+    end
+    -- Remove a primeira letra se showFirstLetter estiver ativo
+    if GameState.showFirstLetter and #letters > 0 then
+        table.remove(letters, 1)
+    end
+    -- Adiciona letras extras aleatórias
+    local alphabet = {}
+    for i = 65, 90 do table.insert(alphabet, string.char(i)) end -- A-Z
+    -- Remove letras já presentes
+    local used = {}
+    for _, l in ipairs(letters) do used[l] = true end
+    -- Gera seed para aleatoriedade
+    local rand = seededRandom(seed)
+    -- Seleciona de 1 a 4 letras extras
+    local numExtras = math.floor(rand() * 4) + 1
+    local extras = {}
+    local available = {}
+    for _, l in ipairs(alphabet) do if not used[l] then table.insert(available, l) end end
+    for i = 1, numExtras do
+        if #available == 0 then break end
+        local idx = math.floor(rand() * #available) + 1
+        table.insert(extras, available[idx])
+        table.remove(available, idx)
+    end
+    for _, l in ipairs(extras) do table.insert(letters, l) end
+    keyboard.originalLetters = letters
+    keyboard.shuffleLetters(seed)
+end
+
+function keyboard.resetLetters(seed)
+    if keyboard.originalLetters then
+        keyboard.shuffleLetters(seed)
+    end
+end
+
+function keyboard.useLetter(letter)
+    -- Marca a primeira ocorrência disponível como usada
+    for i, obj in ipairs(keyboard.lettersState) do
+        if obj.letter == letter and obj.available then
+            obj.available = false
+            break
+        end
+    end
+end
+
+function keyboard.restoreLetter(letter)
+    -- Restaura a primeira ocorrência não disponível
+    for i, obj in ipairs(keyboard.lettersState) do
+        if obj.letter == letter and not obj.available then
+            obj.available = true
+            break
+        end
+    end
+end
+
+local function getRows()
+    if not keyboard.availableLetters then
+        return keyboard.rows
+    end
+    -- Distribute available letters in up to 3 rows
+    local rows = {{}, {}, {}}
+    local perRow = math.ceil(#keyboard.availableLetters / 3)
+    for i, letter in ipairs(keyboard.availableLetters) do
+        local rowIdx = math.ceil(i / perRow)
+        table.insert(rows[rowIdx], letter)
+    end
+    return rows
+end
 
 function keyboard.draw(screenWidth, screenHeight)
-    local numRows = #keyboard.rows
-    local totalHeight = numRows * keyboard.boxSize + (numRows - 1) * keyboard.boxSpacing
-    local startY = screenHeight - totalHeight - 32 - (screenHeight * 0.1)
-    for rowIdx, row in ipairs(keyboard.rows) do
-        local boxes = #row
-        local totalWidth = boxes * keyboard.boxSize + (boxes - 1) * keyboard.boxSpacing
-        local startX = (screenWidth - totalWidth) / 2
-        local y = startY + (rowIdx - 1) * (keyboard.boxSize + keyboard.boxSpacing)
-        for i = 1, boxes do
+    local letters = keyboard.lettersState or {}
+    local boxes = #letters
+    if boxes == 0 then return end
+    local totalWidth = boxes * keyboard.boxSize + (boxes - 1) * keyboard.boxSpacing
+    local startX = (screenWidth - totalWidth) / 2
+    local y = screenHeight - keyboard.boxSize - 32 - (screenHeight * 0.1)
+    for i, obj in ipairs(letters) do
+        if obj.available then
             local x = startX + (i - 1) * (keyboard.boxSize + keyboard.boxSpacing)
             love.graphics.setColor(1, 1, 1)
             love.graphics.rectangle("fill", x, y, keyboard.boxSize, keyboard.boxSize, 8, 8)
             love.graphics.setColor(0, 0, 0)
             local letterFont = love.graphics.newFont(20)
             love.graphics.setFont(letterFont)
-            local letter = row[i]
+            local letter = obj.letter
             local letterWidth = letterFont:getWidth(letter)
             local letterHeight = letterFont:getHeight()
             love.graphics.print(letter, x + (keyboard.boxSize - letterWidth) / 2, y + (keyboard.boxSize - letterHeight) / 2)
@@ -49,9 +154,8 @@ end
 function keyboard.getEraseButtonRect(screenWidth, screenHeight)
     local eraseW, eraseH = 90, 36
     local eraseX = (screenWidth - eraseW) / 2
-    local numRows = #keyboard.rows
-    local totalHeight = numRows * keyboard.boxSize + (numRows - 1) * keyboard.boxSpacing
-    local eraseY = screenHeight - 24 - (screenHeight * 0.1)
+    local y = screenHeight - keyboard.boxSize - 32 - (screenHeight * 0.1)
+    local eraseY = y + keyboard.boxSize + 12
     return eraseX, eraseY, eraseW, eraseH
 end
 
