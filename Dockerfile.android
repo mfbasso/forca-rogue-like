@@ -1,0 +1,10 @@
+FROM openjdk:8-jdk-alpine
+
+WORKDIR /app
+COPY . /app
+
+RUN apk add --no-cache bash wget zip && \
+    zip -r game.love . -x "web/*" && \
+    wget https://github.com/love2d/love-android/releases/download/11.5/love-11.5-android-embed.apk -O build/android/love-11.5-android-embed.apk
+
+CMD ["sh", "-c", "ls -lh build/android && echo 'APK download complete'"]

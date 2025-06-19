@@ -22,3 +22,12 @@ serve:
 deploy:
 	@echo "Deploying to GitHub Pages..."
 	@curl https://integrations.esportetenis.com/webhook/b52ac233-20e6-4fd6-9030-364ed530e03b
+
+build-android:
+	@echo "Building for Android..."
+	@mkdir -p build/android
+	@docker build -f Dockerfile.android -t love-android .
+	@docker run --rm -v $(PWD)/build/android:/app/output love-android cp /app/build/android/love-11.5-android-embed.apk /app/output/forca-rogue-like.apk
+	@echo "APK copied to build/android/"
+	@cp build/android/forca-rogue-like.apk web/game.apk
+	@echo "Done!"
