@@ -12,3 +12,5 @@ services:
       - "traefik.http.routers.forca-rogue-like.entrypoints=web"
       - "traefik.http.services.forca-rogue-like.loadbalancer.server.port=8080"
       - "traefik.docker.network=web"
+    networks:
+      - web
