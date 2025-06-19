@@ -270,24 +270,21 @@ function GameScene:mousepressed(x, y, button)
     if self.state ~= "playing" then return end
     local screenW = love.graphics.getWidth()
     local screenH = love.graphics.getHeight()
-    -- Clique nas letras (linha única, pode ter letras repetidas)
-    local letters = keyboard.lettersState or {}
-    local boxes = #letters
-    if boxes > 0 then
-        local totalWidth = boxes * keyboard.boxSize + (boxes - 1) * keyboard.boxSpacing
-        local startX = (screenW - totalWidth) / 2
-        local y = screenH - keyboard.boxSize - 32 - (screenH * 0.1)
-        for i, obj in ipairs(letters) do
-            if obj.available then
-                local xk = startX + (i - 1) * (keyboard.boxSize + keyboard.boxSpacing)
-                if x >= xk and x <= xk + keyboard.boxSize and y >= y and y <= y + keyboard.boxSize then
-                    local letter = obj.letter
+    -- Clique nas letras (agora suporta múltiplas linhas e índice global correto)
+    local keyRects = keyboard.getKeyRects(screenW, screenH)
+    for _, key in ipairs(keyRects) do
+        if key.letter and key.x and key.y and key.w and key.h and key.index then
+            if x >= key.x and x <= key.x + key.w and y >= key.y and y <= key.y + key.h then
+                local letter = key.letter
+                if self.letterBoxesComponent.insertLetterAnimated then
+                    self.letterBoxesComponent:insertLetterAnimated(letter, key.x, key.y)
+                else
                     self.letterBoxesComponent:insertLetter(letter)
-                    keyboard.useLetter(letter)
-                    playTypeSound()
-                    self:checkAnswer()
-                    return
                 end
+                keyboard.useLetter(letter, key.index)
+                playTypeSound()
+                self:checkAnswer()
+                return
             end
         end
     end

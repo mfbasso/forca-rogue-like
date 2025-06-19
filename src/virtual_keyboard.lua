@@ -81,9 +81,16 @@ function keyboard.resetLetters(seed)
     end
 end
 
-function keyboard.useLetter(letter)
-    -- Marca a primeira ocorrência disponível como usada
-    for i, obj in ipairs(keyboard.lettersState) do
+function keyboard.useLetter(letter, index)
+    -- Se index for fornecido, remove exatamente aquele
+    if index then
+        if keyboard.lettersState and keyboard.lettersState[index] and keyboard.lettersState[index].letter == letter and keyboard.lettersState[index].available then
+            keyboard.lettersState[index].available = false
+            return
+        end
+    end
+    -- Caso contrário, remove a primeira ocorrência disponível
+    for i, obj in ipairs(keyboard.lettersState or {}) do
         if obj.letter == letter and obj.available then
             obj.available = false
             break
@@ -119,23 +126,16 @@ function keyboard.draw(screenWidth, screenHeight)
     local letters = keyboard.lettersState or {}
     local total = #letters
     if total == 0 then return end
+    -- Divide as letras em até duas linhas, mantendo a ordem e o índice global
     local rows = {}
     if total > 7 then
         local half = math.ceil(total / 2)
-        for i = 1, half do
-            table.insert(rows, {letters[i]})
-        end
-        for i = half + 1, total do
-            if not rows[i - half] then rows[i - half] = {} end
-            table.insert(rows[i - half], letters[i])
-        end
-        -- Reorganiza para duas linhas
-        local row1, row2 = {}, {}
-        for i = 1, half do table.insert(row1, letters[i]) end
-        for i = half + 1, total do table.insert(row2, letters[i]) end
-        rows = {row1, row2}
+        rows[1] = {}
+        rows[2] = {}
+        for i = 1, half do table.insert(rows[1], letters[i]) end
+        for i = half + 1, total do table.insert(rows[2], letters[i]) end
     else
-        rows = {letters}
+        rows[1] = letters
     end
     local numRows = #rows
     local boxSize = keyboard.boxSize
@@ -143,6 +143,7 @@ function keyboard.draw(screenWidth, screenHeight)
     local totalHeight = numRows * boxSize + (numRows - 1) * boxSpacing
     local startY = screenHeight - totalHeight - 32 - (screenHeight * 0.1)
     local font = love.graphics.newFont(20)
+    local globalIndex = 1
     for rowIdx, row in ipairs(rows) do
         local boxes = #row
         local totalWidth = boxes * boxSize + (boxes - 1) * boxSpacing
@@ -161,6 +162,7 @@ function keyboard.draw(screenWidth, screenHeight)
                 local letterHeight = font:getHeight()
                 love.graphics.print(letter, x + (boxSize - letterWidth) / 2, y + (boxSize - letterHeight) / 2)
             end
+            globalIndex = globalIndex + 1
         end
     end
     -- Botão de apagar
@@ -184,6 +186,52 @@ function keyboard.getEraseButtonRect(screenWidth, screenHeight)
     local y = screenHeight - keyboard.boxSize - 32 - (screenHeight * 0.1)
     local eraseY = y + keyboard.boxSize + 12
     return eraseX, eraseY, eraseW, eraseH
+end
+
+-- Retorna uma lista de teclas com posição de tela e índice global
+function keyboard.getKeyRects(screenWidth, screenHeight)
+    local letters = keyboard.lettersState or {}
+    local total = #letters
+    if total == 0 then return {} end
+    local rows = {}
+    if total > 7 then
+        local half = math.ceil(total / 2)
+        rows[1] = {}
+        rows[2] = {}
+        for i = 1, half do table.insert(rows[1], letters[i]) end
+        for i = half + 1, total do table.insert(rows[2], letters[i]) end
+    else
+        rows[1] = letters
+    end
+    local numRows = #rows
+    local boxSize = keyboard.boxSize
+    local boxSpacing = keyboard.boxSpacing
+    local totalHeight = numRows * boxSize + (numRows - 1) * boxSpacing
+    local startY = screenHeight - totalHeight - 32 - (screenHeight * 0.1)
+    local keyRects = {}
+    local globalIndex = 1
+    for rowIdx, row in ipairs(rows) do
+        local boxes = #row
+        local totalWidth = boxes * boxSize + (boxes - 1) * boxSpacing
+        local startX = (screenWidth - totalWidth) / 2
+        local y = startY + (rowIdx - 1) * (boxSize + boxSpacing)
+        for i = 1, boxes do
+            local obj = row[i]
+            if obj and obj.available then
+                local x = startX + (i - 1) * (boxSize + boxSpacing)
+                table.insert(keyRects, {
+                    letter = obj.letter,
+                    index = globalIndex,
+                    x = x,
+                    y = y,
+                    w = boxSize,
+                    h = boxSize
+                })
+            end
+            globalIndex = globalIndex + 1
+        end
+    end
+    return keyRects
 end
 
 return keyboard
