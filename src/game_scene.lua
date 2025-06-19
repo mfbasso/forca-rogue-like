@@ -108,11 +108,35 @@ function GameScene:setCurrentQuestion()
     keyboard.setAvailableLetters(q.answer, self.seedNum)
 end
 
+-- Animação de letra indo do teclado para a caixa de resposta
+local activeAnimations = {}
+
+local function startLetterAnimation(letter, fromX, fromY, toX, toY, duration)
+    table.insert(activeAnimations, {
+        letter = letter,
+        fromX = fromX,
+        fromY = fromY,
+        toX = toX,
+        toY = toY,
+        duration = duration or 0.25,
+        elapsed = 0
+    })
+end
+
 function GameScene:update(dt)
     if self.state ~= "playing" then return end
     self.timeLeft = self.timeLeft - dt
     if self.timeLeft <= 0 then
         self.state = "gameover"
+    end
+    -- Atualiza animações
+    for i = #activeAnimations, 1, -1 do
+        local anim = activeAnimations[i]
+        anim.elapsed = anim.elapsed + dt
+        if anim.elapsed >= anim.duration then
+            if anim.onFinish then anim.onFinish() end
+            table.remove(activeAnimations, i)
+        end
     end
 end
 
@@ -198,9 +222,16 @@ function GameScene:draw()
     love.graphics.printf(questionText, 32, 180, maxWidth, "center")
     self.letterBoxesComponent:draw()
     keyboard.draw(screenW, screenH)
-    love.graphics.setFont(fontCache.font18)
-    love.graphics.setColor(1, 1, 0.2)
-    love.graphics.print("Time: " .. math.ceil(self.timeLeft), screenW - 120, 20)
+    -- Desenha animações de letras
+    for _, anim in ipairs(activeAnimations) do
+        local t = math.min(anim.elapsed / anim.duration, 1)
+        local x = anim.fromX + (anim.toX - anim.fromX) * t
+        local y = anim.fromY + (anim.toY - anim.fromY) * t
+        love.graphics.setColor(1, 1, 1, 1-t*0.3)
+        local font = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 28)
+        love.graphics.setFont(font)
+        love.graphics.print(anim.letter, x, y)
+    end
     love.graphics.setColor(1, 1, 1)
     local roundText = self.round or 1
     love.graphics.print("Round: " .. tostring(roundText), 32, 20)
@@ -275,15 +306,31 @@ function GameScene:mousepressed(x, y, button)
     for _, key in ipairs(keyRects) do
         if key.letter and key.x and key.y and key.w and key.h and key.index then
             if x >= key.x and x <= key.x + key.w and y >= key.y and y <= key.y + key.h then
-                local letter = key.letter
-                if self.letterBoxesComponent.insertLetterAnimated then
-                    self.letterBoxesComponent:insertLetterAnimated(letter, key.x, key.y)
-                else
-                    self.letterBoxesComponent:insertLetter(letter)
+                -- Calcula destino da animação (primeira caixa vazia)
+                local boxRects = self.letterBoxesComponent:getBoxRects()
+                local targetIdx = nil
+                for i, _ in ipairs(self.letterBoxesComponent.letters) do
+                    if self.letterBoxesComponent.letters[i] == "" then
+                        targetIdx = i
+                        break
+                    end
                 end
-                keyboard.useLetter(letter, key.index)
-                playTypeSound()
-                self:checkAnswer()
+                if targetIdx then
+                    local toRect = boxRects[targetIdx]
+                    local fromX = key.x + key.w/2
+                    local fromY = key.y + key.h/2
+                    local toX = toRect.x + toRect.w/2
+                    local toY = toRect.y + toRect.h/2
+                    startLetterAnimation(key.letter, fromX, fromY, toX, toY, 0.15)
+                end
+                -- Após a animação, preenche a resposta normalmente
+                -- Adiciona um campo callback na animação
+                activeAnimations[#activeAnimations].onFinish = function()
+                    self.letterBoxesComponent:insertLetter(key.letter)
+                    keyboard.useLetter(key.letter, key.index)
+                    playTypeSound()
+                    self:checkAnswer()
+                end
                 return
             end
         end
