@@ -18,3 +18,7 @@ watch:
 
 serve:
 	cd web && npx node server.js
+
+deploy:
+	@echo "Deploying to GitHub Pages..."
+	@curl https://integrations.esportetenis.com/webhook/b52ac233-20e6-4fd6-9030-364ed530e03b
