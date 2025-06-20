@@ -5,7 +5,6 @@ COPY . /app
 
 RUN apk add --no-cache make bash love zip
 RUN make lovejs
-RUN cp web/server.js forca-rogue-like/server.js
 
 EXPOSE 8080
 
