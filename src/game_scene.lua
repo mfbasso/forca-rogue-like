@@ -321,13 +321,12 @@ function GameScene:mousepressed(x, y, button)
                     local fromY = key.y + key.h/2
                     local toX = toRect.x + toRect.w/2
                     local toY = toRect.y + toRect.h/2
-                    startLetterAnimation(key.letter, fromX, fromY, toX, toY, 0.15)
+                    keyboard.useLetter(key.letter, key.index)
+                    startLetterAnimation(key.letter, fromX, fromY, toX, toY, 0.25)
                 end
                 -- Após a animação, preenche a resposta normalmente
-                -- Adiciona um campo callback na animação
                 activeAnimations[#activeAnimations].onFinish = function()
                     self.letterBoxesComponent:insertLetter(key.letter)
-                    keyboard.useLetter(key.letter, key.index)
                     playTypeSound()
                     self:checkAnswer()
                 end
