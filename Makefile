@@ -32,11 +32,9 @@ build-love:
 
 lovejs: build-love
 	@echo "Gerando nome aleatório para o arquivo .love..."
-	@export RAND_NAME=$(shell date +%Y%m%d%H%M%S).love; \
-	cp forca-rogue-like.love web/$$RAND_NAME; \
-	sed -i.bak "s/game.love/$$RAND_NAME/g" web/index.html; \
-	echo "Arquivo copiado para web/$$RAND_NAME e index.html atualizado."; \
-	rm -f web/index.html.bak
+	npx love.js forca-rogue-like.love forca-rogue-like -c -m 500000000 -t "Forca Rogue Like"
+	cp web/server.js forca-rogue-like/server.js
+	cp web/love.css forca-rogue-like/theme/love.css
 
 watch:
 	love --console --watch .
