@@ -6,7 +6,8 @@ run:
 build-love:
 	@echo "Gerando forca-rogue-like.love..."
 	@rm -f forca-rogue-like.love
-	@zip -9 -r forca-rogue-like.love . -x "web/*" -x "*.love" -x "*.DS_Store" -x "Makefile" -x "*.md" -x "*/.git*" -x "*/__pycache__/*"
+	@zip -9 -r forca-rogue-like.love . \
+	    -x "web/*" -x "*.love" -x "*.DS_Store" -x "Makefile" -x "*.md" -x "*/.git*" -x "*/__pycache__/*" -x ".git"
 
 lovejs: build-love
 	@echo "Gerando nome aleatório para o arquivo .love..."
