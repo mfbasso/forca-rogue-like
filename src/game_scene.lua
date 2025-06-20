@@ -228,13 +228,18 @@ function GameScene:draw()
         local x = anim.fromX + (anim.toX - anim.fromX) * t
         local y = anim.fromY + (anim.toY - anim.fromY) * t
         love.graphics.setColor(1, 1, 1, 1-t*0.3)
-        local font = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 28)
-        love.graphics.setFont(font)
+        local animFont = love.graphics.newFont("assets/fonts/ShareTechMono-Regular.ttf", 28)
+        love.graphics.setFont(animFont)
         love.graphics.print(anim.letter, x, y)
     end
     love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(fontCache.font22)
     local roundText = self.round or 1
     love.graphics.print("Round: " .. tostring(roundText), 32, 20)
+    love.graphics.setFont(fontCache.font18)
+    love.graphics.setColor(1, 1, 0.2)
+    love.graphics.print("Time: " .. math.ceil(self.timeLeft), screenW - 120, 20)
+    love.graphics.setColor(1, 1, 1)
 end
 
 function GameScene:mousepressed(x, y, button)
