@@ -3,6 +3,7 @@ local GameState = require("src.game_state")
 local question_selector = require("src/utils/question_selector")
 local keyboard = require("src.virtual_keyboard")
 local randomSeed = require("src.utils.random_seed")
+local itemsCore = require("src.items.core")
 local GameScene = {}
 GameScene.__index = GameScene
 
@@ -168,31 +169,22 @@ function GameScene:draw()
         local coinsText = "Moedas: " .. tostring(GameState.coins or 0)
         love.graphics.setFont(fontCache.font22)
         love.graphics.print(coinsText, 32, 20)
-        -- Item: Primeira letra
-        if not GameState.showFirstLetter then
-            local itemY = screenH/2 - 40
-            local itemW, itemH = 340, 70
+        -- Itens aleatórios
+        if not self.shopItems then
+            self.shopItems = itemsCore.getRandomItems(2)
+        end
+        local itemW, itemH = 340, 70
+        for idx, itemName in ipairs(self.shopItems) do
+            local item = itemsCore.items[itemName]
+            local itemY = screenH/2 - 80 + (idx-1)*100
             local itemX = (screenW - itemW) / 2
-            love.graphics.setColor(0.15, 0.15, 0.2)
+            love.graphics.setColor(0.15, 0.15 + 0.05*idx, 0.2)
             love.graphics.rectangle("fill", itemX, itemY, itemW, itemH, 14, 14)
             love.graphics.setColor(1, 1, 1)
             love.graphics.setFont(fontCache.font24)
-            love.graphics.printf("Primeira letra", itemX, itemY + 10, itemW, "center")
+            love.graphics.printf(item.title or itemName, itemX, itemY + 10, itemW, "center")
             love.graphics.setFont(fontCache.font18)
-            love.graphics.printf("Custa: 40 moedas", itemX, itemY + 40, itemW, "center")
-        end
-        -- Item: +10 segundos
-        if GameState.roundTime < 60 and not GameState.plusTimeBought then
-            local plusTimeY = screenH/2 + 50
-            local plusTimeW, plusTimeH = 340, 70
-            local plusTimeX = (screenW - plusTimeW) / 2
-            love.graphics.setColor(0.15, 0.2, 0.15)
-            love.graphics.rectangle("fill", plusTimeX, plusTimeY, plusTimeW, plusTimeH, 14, 14)
-            love.graphics.setColor(1, 1, 1)
-            love.graphics.setFont(fontCache.font24)
-            love.graphics.printf("+10 segundos", plusTimeX, plusTimeY + 10, plusTimeW, "center")
-            love.graphics.setFont(fontCache.font18)
-            love.graphics.printf("Custa: 60 moedas", plusTimeX, plusTimeY + 40, plusTimeW, "center")
+            love.graphics.printf("Custa: " .. tostring(item.price or 0) .. " moedas", itemX, itemY + 40, itemW, "center")
         end
         -- Botão próximo round
         local btnW, btnH = 320, 48
@@ -265,36 +257,25 @@ function GameScene:mousepressed(x, y, button)
         return
     elseif self.state == "next_round" then
         local screenW, screenH = love.graphics.getDimensions()
-        -- Item: Primeira letra
+        if not self.shopItems then self.shopItems = itemsCore.getRandomItems(2) end
         local itemW, itemH = 340, 70
-        local itemX = (screenW - itemW) / 2
-        local itemY = screenH/2 - 40
-        if x >= itemX and x <= itemX + itemW and y >= itemY and y <= itemY + itemH then
-            if GameState.coins >= 40 and not GameState.showFirstLetter then
-                GameState.coins = GameState.coins - 40
-                GameState.showFirstLetter = true
-                playPowerupSound()
+        for idx, itemName in ipairs(self.shopItems) do
+            local itemY = screenH/2 - 80 + (idx-1)*100
+            local itemX = (screenW - itemW) / 2
+            if x >= itemX and x <= itemX + itemW and y >= itemY and y <= itemY + itemH then
+                local bought = itemsCore.buyItem(itemName)
+                if bought then
+                    table.remove(self.shopItems, idx)
+                end
+                return
             end
-            return
-        end
-        -- Item: +10 segundos
-        local plusTimeW, plusTimeH = 340, 70
-        local plusTimeX = (screenW - plusTimeW) / 2
-        local plusTimeY = screenH/2 + 50
-        if x >= plusTimeX and x <= plusTimeX + plusTimeW and y >= plusTimeY and y <= plusTimeY + plusTimeH then
-            if GameState.coins >= 60 and not GameState.plusTimeBought then
-                GameState.coins = GameState.coins - 60
-                GameState.roundTime = GameState.roundTime + 10
-                GameState.plusTimeBought = true
-                playPowerupSound()
-            end
-            return
         end
         -- Botão próximo round
         local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
         local btnY = screenH - btnH - 32
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
+            self.shopItems = nil -- reseta para sortear novos itens no próximo next_round
             self:goToNextRound()
             return
         end
@@ -427,6 +408,7 @@ function GameScene:goToNextRound()
     self.state = "playing"
     self.questions = self:selectQuestionsForRound()
     self:setCurrentQuestion()
+    self.shopItems = nil -- reseta para sortear novos itens na próxima loja
 end
 
 return GameScene

@@ -2,19 +2,37 @@ local Defaults = {
     showFirstLetter = false,
     repeatQuestions = false,
     coins = 0,
-    roundTime = 5,
+    roundTime = 120,
     plusTimeBought = false,
     deacreaseTimePerRound = 5,
+    bougthItems = {},
 }
 
-local GameState = Defaults
-
-local function resetGame() 
-    for k, v in pairs(Defaults) do
+local GameState = {}
+for k, v in pairs(Defaults) do
+    if type(v) == "table" then
+        GameState[k] = {}
+        for k2, v2 in pairs(v) do
+            GameState[k][k2] = v2
+        end
+    else
         GameState[k] = v
     end
 end
 
-Defaults.reset = resetGame
+local function resetGame() 
+    for k, v in pairs(Defaults) do
+        if type(v) == "table" then
+            GameState[k] = {}
+            for k2, v2 in pairs(v) do
+                GameState[k][k2] = v2
+            end
+        else
+            GameState[k] = v
+        end
+    end
+end
+
+GameState.reset = resetGame
 
 return GameState
