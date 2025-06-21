@@ -54,6 +54,13 @@ local function resetGameState()
 end
 
 function GameScene:new(allQuestions, round, seed)
+    if seed then
+        local numSeed = 0
+        for i = 1, #seed do
+            numSeed = numSeed + string.byte(seed, i)
+        end
+        math.randomseed(numSeed)
+    end
     local obj = setmetatable({}, self)
     obj.allQuestions = allQuestions
     obj.round = round or 1

@@ -30,8 +30,7 @@ local function weighted_random_choice(weights)
     return next(weights)
 end
 
-local function select_question(round, seed)
-    if seed then math.randomseed(seed) end
+local function select_question(round)
     local probs = get_probabilities_for_round(round)
     local levels = {}
     for lvl, _ in pairs(probs) do table.insert(levels, lvl) end
