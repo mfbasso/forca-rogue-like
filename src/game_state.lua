@@ -4,7 +4,7 @@ local Defaults = {
     coins = 0,
     roundTime = 120,
     plusTimeBought = false,
-    deacreaseTimePerRound = 5,
+    deacreaseTimePerRound = 10,
     bougthItems = {},
 }
 

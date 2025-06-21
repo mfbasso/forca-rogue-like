@@ -4,9 +4,11 @@ local item = {}
 
 item.name = "first_letter"
 item.title = "Primeira letra"
-item.price = 40
-item.sell_price = 20
-item.type = "common"
+item.price = 180
+item.sell_price = 90
+item.type = "rare"
+item.description = "Revela a primeira letra da resposta correta."
+item.shouldRegister = true
 
 item.active = function()
   GameState.showFirstLetter = true

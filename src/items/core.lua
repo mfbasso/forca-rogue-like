@@ -2,7 +2,10 @@ local GameState = require("src.game_state")
 
 local items = {
   first_letter = require("src.items.first_letter"),
-  plus_time = require("src.items.plus_time"),
+  plus_5_time = require("src.items.plus_5_time"),
+  plus_10_time = require("src.items.plus_10_time"),
+  plus_60_time = require("src.items.plus_60_time"),
+  round_50_percent_decrease = require("src.items.round_50_percent_decrease"),
 }
 
 local function buyItem(itemName)
@@ -10,7 +13,9 @@ local function buyItem(itemName)
   if not item then return false end
   if GameState.coins < item.price then return false end
   GameState.coins = GameState.coins - item.price
-  GameState.bougthItems[itemName] = true
+  if item.shouldRegister ~= false then
+    GameState.bougthItems[itemName] = true
+  end
   item.active()
   return true
 end
@@ -32,15 +37,26 @@ local typeProbabilities = {
   common = 0.70
 }
 
+local typeOrder = {"legendary", "rare", "uncommon", "common"}
+
+local function shuffle(tbl)
+  for i = #tbl, 2, -1 do
+    local j = math.random(i)
+    tbl[i], tbl[j] = tbl[j], tbl[i]
+  end
+end
+
 local function weightedTypePick()
+  local shuffledTypeOrder = {unpack(typeOrder)}
+  shuffle(shuffledTypeOrder)
   local total = 0
-  for _, prob in pairs(typeProbabilities) do
-    total = total + prob
+  for _, type in ipairs(shuffledTypeOrder) do
+    total = total + (typeProbabilities[type] or 0)
   end
   local r = math.random() * total
   local acc = 0
-  for type, prob in pairs(typeProbabilities) do
-    acc = acc + prob
+  for _, type in ipairs(shuffledTypeOrder) do
+    acc = acc + (typeProbabilities[type] or 0)
     if r <= acc then
       return type
     end
@@ -56,6 +72,13 @@ local function getRandomItems(numItems)
       if availableItemsByType[t] then
         table.insert(availableItemsByType[t], name)
       end
+    end
+  end
+  -- Embaralha os pools de cada tipo para garantir aleatoriedade
+  for _, pool in pairs(availableItemsByType) do
+    for i = #pool, 2, -1 do
+      local j = math.random(i)
+      pool[i], pool[j] = pool[j], pool[i]
     end
   end
   print("Available items by type:")

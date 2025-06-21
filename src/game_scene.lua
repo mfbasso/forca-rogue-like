@@ -275,7 +275,7 @@ function GameScene:mousepressed(x, y, button)
         local btnX = (screenW - btnW) / 2
         local btnY = screenH - btnH - 32
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
-            self.shopItems = nil -- reseta para sortear novos itens no próximo next_round
+            self.shopItems = nil
             self:goToNextRound()
             return
         end
@@ -403,7 +403,7 @@ function GameScene:goToNextRound()
     self.round = (self.round or 1) + 1
     self.currentIndex = 1
     self.correctCount = 0
-    GameState.roundTime = math.max(10, GameState.roundTime - 3)
+    GameState.roundTime = math.max(10, GameState.roundTime - GameState.deacreaseTimePerRound)
     self.timeLeft = GameState.roundTime
     self.state = "playing"
     self.questions = self:selectQuestionsForRound()
