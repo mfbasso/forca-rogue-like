@@ -49,10 +49,7 @@ local function playPowerupSound()
 end
 
 local function resetGameState()
-    GameState.coins = 0
-    GameState.showFirstLetter = false
-    GameState.plusTimeBought = false
-    GameState.roundTime = 30
+    GameState.reset()
 end
 
 function GameScene:new(allQuestions, round, seed)
