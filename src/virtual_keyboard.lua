@@ -40,33 +40,61 @@ function keyboard.shuffleLetters(seed)
 end
 
 function keyboard.setAvailableLetters(answer, seed)
-    -- Cria lista de letras (com repetições, sem espaços)
+    local GameState = require("src.game_state")
     local letters = {}
     answer = answer:gsub(" ", "")
+    -- Recupera as posições fixas da LetterBoxes (se já criadas)
+    local fixedPositions = nil
+    if keyboard.lastLetterBoxes and keyboard.lastLetterBoxes.word == answer then
+        fixedPositions = keyboard.lastLetterBoxes.fixedPositions
+    end
+    -- Marca as posições reveladas
+    local revealedCount = {}
+    if fixedPositions then
+        for i = 1, #answer do
+            if fixedPositions[i] then
+                local c = answer:sub(i, i):upper()
+                revealedCount[c] = (revealedCount[c] or 0) + 1
+            end
+        end
+    else
+        -- fallback: só primeira letra
+        if GameState.showFirstLetter then
+            local c = answer:sub(1, 1):upper()
+            revealedCount[c] = 1
+        end
+    end
+    -- Adiciona todas as letras da resposta ao teclado, exceto as já reveladas (respeitando repetições)
+    local used = {}
     for i = 1, #answer do
         local c = answer:sub(i, i):upper()
-        table.insert(letters, c)
+        used[c] = (used[c] or 0) + 1
+        local revealed = revealedCount[c] or 0
+        if used[c] > revealed then
+            table.insert(letters, c)
+        end
     end
-    -- Remove a primeira letra se showFirstLetter estiver ativo
-    if GameState.showFirstLetter and #letters > 0 then
-        table.remove(letters, 1)
-    end
-    -- Adiciona letras extras aleatórias
     local alphabet = {}
-    for i = 65, 90 do table.insert(alphabet, string.char(i)) end -- A-Z
-    -- Remove letras já presentes
-    local used = {}
-    for _, l in ipairs(letters) do used[l] = true end
-    -- Gera seed para aleatoriedade
-    local rand = seededRandom(seed)
-    -- Seleciona de 1 a 4 letras extras
-    local numExtras = math.floor(rand() * 4) + 1
+    for i = 65, 90 do table.insert(alphabet, string.char(i)) end
+    local usedExtra = {}
+    for _, l in ipairs(letters) do usedExtra[l] = true end
+    local rand = seed and (function()
+        local m = 2^32
+        local a = 1664525
+        local c = 1013904223
+        local state = seed or os.time()
+        return function()
+            state = (a * state + c) % m
+            return state / m
+        end
+    end)() or math.random
+    local numExtras = math.floor((rand() or math.random()) * 4) + 1
     local extras = {}
     local available = {}
-    for _, l in ipairs(alphabet) do if not used[l] then table.insert(available, l) end end
+    for _, l in ipairs(alphabet) do if not usedExtra[l] then table.insert(available, l) end end
     for i = 1, numExtras do
         if #available == 0 then break end
-        local idx = math.floor(rand() * #available) + 1
+        local idx = math.floor((rand() or math.random()) * #available) + 1
         table.insert(extras, available[idx])
         table.remove(available, idx)
     end

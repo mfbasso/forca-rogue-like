@@ -1,5 +1,6 @@
 local Defaults = {
     showFirstLetter = false,
+    showFiftyPercent = false,
     repeatQuestions = false,
     coins = 0,
     roundTime = 120,

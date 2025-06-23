@@ -19,12 +19,48 @@ function LetterBoxes:setWord(word, showFirstLetter)
     self.word = word or ""
     self.letters = {}
     self.showFirstLetter = showFirstLetter == nil and self.showFirstLetter or showFirstLetter
+    local GameState = require("src.game_state")
     local idx = 1
+    -- Gera as posições fixas uma única vez por palavra
+    if not self.fixedPositions or self.lastFixedWord ~= self.word then
+        self.fixedPositions = {}
+        self.lastFixedWord = self.word
+        local revealed = {}
+        if GameState.showFiftyPercent then
+            local toReveal = math.floor(#self.word / 2)
+            local positions = {}
+            for i = 1, #self.word do
+                if self.word:sub(i, i) ~= " " then
+                    table.insert(positions, i)
+                end
+            end
+            -- Usa uma seed baseada na palavra para garantir sempre o mesmo embaralhamento
+            local seed = 0
+            for i = 1, #self.word do seed = seed + string.byte(self.word, i) end
+            local oldRandom = math.random
+            math.randomseed(seed)
+            for i = #positions, 2, -1 do
+                local j = math.random(i)
+                positions[i], positions[j] = positions[j], positions[i]
+            end
+            math.random = oldRandom
+            for i = 1, toReveal do
+                revealed[positions[i]] = true
+            end
+        end
+        for i = 1, #self.word do
+            if GameState.showFiftyPercent and revealed[i] then
+                self.fixedPositions[i] = true
+            elseif self.showFirstLetter and i == 1 then
+                self.fixedPositions[i] = true
+            end
+        end
+    end
     for i = 1, #self.word do
         local c = self.word:sub(i, i)
         if c == " " then
             self.letters[idx] = "_SPACE_"
-        elseif self.showFirstLetter and i == 1 then
+        elseif self.fixedPositions[i] then
             self.letters[idx] = c
         else
             self.letters[idx] = ""
@@ -48,11 +84,7 @@ end
 
 function LetterBoxes:removeLastLetter()
     for i = #self.letters, 1, -1 do
-        if self.letters[i] ~= "" and self.letters[i] ~= "_SPACE_" then
-            -- Se showFirstLetter está ativo e é a primeira letra, não apaga
-            if self.showFirstLetter and i == 1 then
-                return nil
-            end
+        if self.letters[i] ~= "" and self.letters[i] ~= "_SPACE_" and not (self.fixedPositions and self.fixedPositions[i]) then
             local removed = self.letters[i]
             self.letters[i] = ""
             return removed
@@ -82,10 +114,7 @@ function LetterBoxes:getBoxRects()
 end
 
 function LetterBoxes:removeLetterAt(index)
-    if self.letters[index] ~= "" and self.letters[index] ~= "_SPACE_" then
-        if self.showFirstLetter and index == 1 then
-            return nil
-        end
+    if self.letters[index] ~= "" and self.letters[index] ~= "_SPACE_" and not (self.fixedPositions and self.fixedPositions[index]) then
         local removed = self.letters[index]
         self.letters[index] = ""
         return removed
