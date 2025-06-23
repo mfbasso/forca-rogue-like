@@ -179,6 +179,7 @@ function GameScene:draw()
         -- Itens aleatórios
         if not self.shopItems then
             self.shopItems = itemsCore.getRandomItems(2)
+            self.rerollCost = 20
         end
         local itemW, itemH = 340, 70
         for idx, itemName in ipairs(self.shopItems) do
@@ -193,6 +194,15 @@ function GameScene:draw()
             love.graphics.setFont(fontCache.font18)
             love.graphics.printf("Custa: " .. tostring(item.price or 0) .. " moedas", itemX, itemY + 40, itemW, "center")
         end
+        -- Botão reroll
+        local rerollW, rerollH = 180, 48
+        local rerollX = (screenW - rerollW) / 2
+        local rerollY = screenH/2 + 140
+        love.graphics.setColor(0.3, 0.3, 0.7)
+        love.graphics.rectangle("fill", rerollX, rerollY, rerollW, rerollH, 10, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(fontCache.font22)
+        love.graphics.printf("Reroll (" .. tostring(self.rerollCost or 20) .. ")", rerollX, rerollY + (rerollH - fontCache.font22:getHeight())/2, rerollW, "center")
         -- Botão próximo round
         local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
@@ -264,7 +274,10 @@ function GameScene:mousepressed(x, y, button)
         return
     elseif self.state == "next_round" then
         local screenW, screenH = love.graphics.getDimensions()
-        if not self.shopItems then self.shopItems = itemsCore.getRandomItems(2) end
+        if not self.shopItems then 
+            self.shopItems = itemsCore.getRandomItems(2)
+            self.rerollCost = 20
+        end
         local itemW, itemH = 340, 70
         for idx, itemName in ipairs(self.shopItems) do
             local itemY = screenH/2 - 80 + (idx-1)*100
@@ -277,12 +290,25 @@ function GameScene:mousepressed(x, y, button)
                 return
             end
         end
+        -- Botão reroll
+        local rerollW, rerollH = 180, 48
+        local rerollX = (screenW - rerollW) / 2
+        local rerollY = screenH/2 + 140
+        if x >= rerollX and x <= rerollX + rerollW and y >= rerollY and y <= rerollY + rerollH then
+            if GameState.coins >= (self.rerollCost or 20) then
+                GameState.coins = GameState.coins - (self.rerollCost or 20)
+                self.rerollCost = (self.rerollCost or 20) + 10
+                self.shopItems = itemsCore.getRandomItems(2)
+            end
+            return
+        end
         -- Botão próximo round
         local btnW, btnH = 320, 48
         local btnX = (screenW - btnW) / 2
         local btnY = screenH - btnH - 32
         if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
             self.shopItems = nil
+            self.rerollCost = nil
             self:goToNextRound()
             return
         end
