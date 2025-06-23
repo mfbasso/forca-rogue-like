@@ -6,6 +6,7 @@ local items = {
   plus_10_time = require("src.items.plus_10_time"),
   plus_60_time = require("src.items.plus_60_time"),
   round_50_percent_decrease = require("src.items.round_50_percent_decrease"),
+  show_50_percent_letters = require("src.items.50_percent_letters"),
 }
 
 local function buyItem(itemName)
