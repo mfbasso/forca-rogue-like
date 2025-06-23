@@ -12,5 +12,10 @@ services:
       - "traefik.http.routers.forca-rogue-like.entrypoints=web"
       - "traefik.http.services.forca-rogue-like.loadbalancer.server.port=8080"
       - "traefik.docker.network=web"
+      - "traefik.http.middlewares.corp.headers.customresponseheaders.Cross-Origin-Opener-Policy=same-origin"
+      - "traefik.http.middlewares.corp.headers.customresponseheaders.Cross-Origin-Embedder-Policy=require-corp"
+      - "traefik.http.routers.forca-rogue-like.middlewares=corp"
     networks:
       - web
+    ports:
+      - "8080:8080"

@@ -1,11 +1,16 @@
-FROM node:20-alpine
+FROM nginx:alpine
 
-WORKDIR /app
-COPY . /app
+WORKDIR /usr/share/nginx/html
 
-RUN apk add --no-cache make bash love zip
-RUN make lovejs
+# Remove default nginx static files
+RUN rm -rf ./*
+
+# Copia os arquivos do build para o nginx
+COPY forca-rogue-like/ .
+COPY forca-rogue-like.love ./game.love
+
+# Adiciona configuração customizada do nginx
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8080
-
-CMD ["npx", "node", "/app/forca-rogue-like/server.js"]
+CMD ["nginx", "-g", "daemon off;"]
