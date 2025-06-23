@@ -34,6 +34,8 @@ lovejs: build-love
 	npx love.js forca-rogue-like.love forca-rogue-like -c -m 500000000 -t "Forca Rogue Like"
 	cp web/server.js forca-rogue-like/server.js
 	cp web/love.css forca-rogue-like/theme/love.css
+	# Garante compatibilidade: renomeia game.data para game.love se necessário
+	if [ -f forca-rogue-like/game.data ]; then cp forca-rogue-like/game.data forca-rogue-like/game.love; fi
 
 watch:
 	love --console --watch .
