@@ -152,6 +152,17 @@ function GameScene:draw()
     local seedText = "Seed: " .. tostring(self.seed or "-")
     love.graphics.setFont(fontCache.font14)
     love.graphics.print(seedText, screenW - 120, screenH - 30)
+    -- Botão de pular (durante a partida)
+    if self.state == "playing" and (GameState.jumps or 0) > 0 then
+        local btnW, btnH = 120, 36
+        local btnX = screenW - btnW - 16
+        local btnY = 60 -- Ajustado para ficar abaixo do tempo
+        love.graphics.setColor(0.2, 0.6, 1)
+        love.graphics.rectangle("fill", btnX, btnY, btnW, btnH, 8, 8)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(fontCache.font18)
+        love.graphics.printf("Pular (" .. tostring(GameState.jumps) .. ")", btnX, btnY + (btnH - fontCache.font18:getHeight())/2, btnW, "center")
+    end
     if self.state == "gameover" then
         love.graphics.setFont(fontCache.font36)
         love.graphics.setColor(1, 0.2, 0.2)
@@ -249,6 +260,26 @@ function GameScene:draw()
 end
 
 function GameScene:mousepressed(x, y, button)
+    -- Botão de pular SEMPRE deve ser verificado antes de qualquer return!
+    if self.state == "playing" and (GameState.jumps or 0) > 0 then
+        local screenW = love.graphics.getWidth()
+        local btnW, btnH = 120, 36
+        local btnX = screenW - btnW - 16
+        local btnY = 60
+        if x >= btnX and x <= btnX + btnW and y >= btnY and y <= btnY + btnH then
+            if self.currentIndex < #self.questions then
+                GameState.jumps = GameState.jumps - 1
+                self.currentIndex = self.currentIndex + 1
+                self:setCurrentQuestion()
+                keyboard.resetLetters(self.seedNum)
+            else
+                GameState.jumps = GameState.jumps - 1
+                self:finishRound()
+                self.state = "next_round"
+            end
+            return -- IMPORTANTE: retorna imediatamente após processar o clique
+        end
+    end
     if self.state == "gameover" then
         local screenW, screenH = love.graphics.getDimensions()
         local btnW, btnH = 220, 48

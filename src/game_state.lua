@@ -2,6 +2,7 @@ local Defaults = {
     showFirstLetter = false,
     showFiftyPercent = false,
     repeatQuestions = false,
+    jumps = 3,
     coins = 0,
     roundTime = 120,
     plusTimeBought = false,
