@@ -8,7 +8,6 @@ build-love:
 	@rm -f forca-rogue-like.love
 	@zip -9 -r forca-rogue-like.love . \
 	    -x "web/*" \
-			-x "*.love" \
 			-x "*.DS_Store" \
 			-x "Makefile" \
 			-x "*.md" \
